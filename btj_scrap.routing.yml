@@ -1,0 +1,7 @@
+btj_scrap.content:
+  path: '/scrap'
+  defaults:
+    _controller: '\Drupal\btj_scrap\Controller\ScrapController::content'
+    _title: 'Hello world title'
+  requirements:
+    _permission: 'access content'

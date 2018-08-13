@@ -1,0 +1,11 @@
+{
+  "repositories": [
+    {
+      "type": "git",
+      "url": "https://github.com/easySuite/BTJScrapping"
+    }
+  ],
+  "require": {
+    "btj/scrapper": "dev-EASYOPAC-921"
+  }
+}
