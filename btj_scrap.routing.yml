@@ -1,7 +1,7 @@
 btj_scrap.content:
-  path: '/scrap'
+  path: '/scrap/{group}/{entity}'
   defaults:
-    _controller: '\Drupal\btj_scrap\Controller\ScrapController::content'
-    _title: 'Hello world title'
+    _controller: '\Drupal\btj_scrap\Controller\ScrapController::scrap'
+    _title: 'Scrap Content'
   requirements:
     _permission: 'access content'

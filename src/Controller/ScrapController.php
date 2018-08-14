@@ -2,9 +2,13 @@
 
 namespace Drupal\btj_scrap\Controller;
 
+
 use Drupal\Core\Controller\ControllerBase;
-use \Drupal\node\Entity\Node;
-use \Drupal\file\Entity\File;
+use Drupal\group\Entity\GroupInterface;
+use Drupal\Core\Queue\QueueWorkerManager;
+use Drupal\Core\Queue\QueueFactory;
+use phpDocumentor\Reflection\DocBlock\Tags\Var_;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 use BTJ\Scrapper\Transport\GouteHttpTransport;
 use BTJ\Scrapper\Service\CSLibraryService;
@@ -18,12 +22,22 @@ use BTJ\Scrapper\Container\NewsContainer;
 use BTJ\Scrapper\Container\LibraryContainerInterface;
 use BTJ\Scrapper\Container\LibraryContainer;
 
-class ScrapController extends ControllerBase {
-  protected $url;
-  protected $scrapper;
+define("BTJ_SCRAP_BATCH_SIZE", 1);
 
-  public function __construct() {
-    $this->url = 'https://bibliotek.ekero.se';
+class ScrapController extends ControllerBase {
+  /**
+   * @var QueueFactory
+   */
+  protected $queueFactory;
+
+  /**
+   * @var QueueWorkerManager
+   */
+  protected $queueManager;
+
+  public function __construct(QueueFactory $queue_factory, QueueWorkerManager $queue_manager) {
+    $this->queue_factory = $queue_factory;
+    $this->queue_manager = $queue_manager;
 
     // Events group url
     //     $url = 'https://bibliotek.ekero.se/calendar/html?fDateMin=2018-01-01';
@@ -33,169 +47,137 @@ class ScrapController extends ControllerBase {
     //    $url = 'https://bibliotek.ekero.se/sv/news/usha-balasundaram-fick-barnens-eget-trolldiplom-2017';
 
     //    $url = 'https://bibliotek.ekero.se/58ca5c6c90cba22d5042c344-sv?type=library-page';
+  }
 
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    $queue_factory = $container->get('queue');
+    $queue_manager = $container->get('plugin.manager.queue_worker');
+
+    return new static($queue_factory, $queue_manager);
+  }
+
+  public function prepare($group, $entity) {
+    $type = $group->get('field_scrapping_type')->getValue();
+    $type = $type[0]['value'];
+    $url = $group->get('field_scrapping_url')->getValue();
+    $url = $url[0]['uri'];
 
     $transport = new GouteHttpTransport();
-    $this->scrapper = new CSLibraryService($transport);
-  }
+    // Prepare scrapper.
+    $scrapper = NULL;
+    if ($type == 'cslibrary') {
+      $scrapper = new CSLibraryService($transport);
+    }
+    elseif ($type == 'axiel') {
+      $scrapper = new AxiellLibraryService($transport);
+    }
+    if (!$scrapper) {
+      return;
+    }
 
-  public function content() {
-    $container = new EventContainer();
-//    $container = new NewsContainer();
-//    $container = new LibraryContainer();
+    $container = NULL;
+    switch ($entity) {
+      case 'libraries':
+        $container = new LibraryContainer();
+        break;
+      case 'events':
+        $container = new EventContainer();
+        break;
+      case 'news':
+        $container = new NewsContainer();
+        break;
+    }
+    if (!$container) {
+      return;
+    }
 
-    $crawler = new Crawler($this->scrapper);
-
-/*    $links = $crawler->getCTLinks($this->url . '/calendar/html?fDateMin=2018-08-01', $container);
+    $crawler = new Crawler($scrapper);
+    $links = $crawler->getCTLinks($url, $container);
     foreach ($links as $link) {
-      $crawler->getNode($this->url . $link, $container);
-//      var_dump($link, $container);
-      $this->createNode($container);
-    }*/
+      $queue = $this->queue_factory->get("btj_scrap_$entity");
 
-    $link = $this->url . '/sv/event/fotografera-med-ett-proffs/496b1857-7ac4-4286-8a44-74ce6ab8b2c7';
-    $crawler->getNode($link, $container);
-    $this->createNode($container);
+      // Create new queue item
+      $item = new \stdClass();
+      $item->data = [
+        'link' => $url . $link,
+        'type' => $type,
+      ];
 
-    // Save event goes here.
-    return [
-      '#type' => 'markup',
-      '#markup' => $this->t($container->getBody()),
+      $queue->createItem($item);
+    }
+  }
+
+  public function scrap(GroupInterface $group, $entity) {
+    $this->prepare($group, $entity);
+
+    // Create batch which collects all the specified queue items and process them one after another
+    $batch = [
+      'title' => $this->t('Scrap and import @entity from <i>@municipality</i>',
+        ['@entity' => $entity, '@municipality' => $group->label()]),
+      'operations' => [],
+      'finished' => 'Drupal\btj_scrap\Controller\ScrapController::batchFinished',
     ];
-  }
 
-  private function createNode(Container $container) {
-    if ($container instanceof EventContainerInterface) {
-      $this->createEvent($container);
-    }
-    elseif ($container instanceof NewsContainerInterface) {
-      $this->createNews($container);
-    }
-    if ($container instanceof LibraryContainerInterface) {
-      $this->createLibrary($container);
-    }
-  }
+    // Get the queue implementation for import_content_from_xml queue
+    $queue_factory = \Drupal::service('queue');
+    $queue = $queue_factory->get("btj_scrap_$entity");
 
-  private function createEvent(Container $container) {
-    $node = Node::create([
-      'type' => 'ding_event',
-      'title' => $container->getTitle(),
-      'field_ding_event_list_image' => [
-        'target_id' => $this->prepareEventListImage($container),
-      ],
-/*      'field_ding_event_title_image' => [
-        'target_id' => $this->prepareEventTitleImage($container),
-      ],*/
-      'field_ding_event_lead' => $container->getLead(),
-      'field_ding_event_body' => $container->getBody(),
-      'field_ding_event_category' => [
-        'target_id' => $this->prepareEventCategory($container),
-      ],
-      'field_ding_event_tags' => $this->prepareEventTags($container),
-      'field_ding_event_price' => $container->getPrice(),
-      'field_ding_event_date' => $this->prepareEventDate($container),
-    ]);
-
-    $node->save();
-  }
-
-  private function createNews(Container $container) {
-
-  }
-
-  private function createLibrary(Container $container) {
-
-  }
-
-  private function prepareEventCategory(Container $container) {
-    $query = \Drupal::entityQuery('taxonomy_term');
-    $query->condition('vid', "event_category");
-    $query->condition('name', $container->getCategory());
-    $tids = $query->execute();
-    if (empty($tids)) {
-      $category = \Drupal\taxonomy\Entity\Term::create([
-        'vid' => 'event_category',
-        'name' => $container->getCategory(),
-      ])->save();
-    } else {
-      $category = reset($tids);
+    // Count number of the items in this queue, and create enough batch operations
+    for($i = 0; $i < ceil($queue->numberOfItems() / BTJ_SCRAP_BATCH_SIZE); $i++) {
+      // Create batch operations
+      $batch['operations'][] = array('Drupal\btj_scrap\Controller\ScrapController::import', [$entity]);
     }
 
-    return $category;
+    // Adds the batch sets
+    batch_set($batch);
+
+    // Process the batch and after redirect to the municipality page.
+    return batch_process('/group/' . $group->id());
   }
 
-  private function prepareEventTags(Container $container) {
-    $tags = $container->getTags();
+  public static function import($entity, &$context) {
+    $queue_factory = \Drupal::service('queue');
+    $queue_manager = \Drupal::service('plugin.manager.queue_worker');
 
-    foreach ($tags as $tag) {
-      $query = \Drupal::entityQuery('taxonomy_term');
-      $query->condition('vid', "tags");
-      $query->condition('name', $tag);
-      $tids = $query->execute();
+    $queue = $queue_factory->get("btj_scrap_$entity");
+    // Get the queue worker
+    $queue_worker = $queue_manager->createInstance("btj_scrap_$entity");
 
-      if (empty($tids)) {
-        $termTag = \Drupal\taxonomy\Entity\Term::create([
-          'vid' => 'tags',
-          'name' => $tag,
-        ]);
-
-        $termTag->save();
-        $termTags[] = $termTag->id();
-      } else {
-        $termTags[] = reset($tids);
+    // Get the number of items
+    $number_of_queue = ($queue->numberOfItems() < BTJ_SCRAP_BATCH_SIZE) ? $queue->numberOfItems() : BTJ_SCRAP_BATCH_SIZE;
+    for ($i = 0; $i < $number_of_queue; $i++) {
+      // Get a queued item
+      if ($item = $queue->claimItem()) {
+        try {
+          // Process it
+          $queue_worker->processItem($item->data);
+          // If everything was correct, delete the processed item from the queue
+          $queue->deleteItem($item);
+        }
+        catch (SuspendQueueException $e) {
+          // If there was an Exception trown because of an error
+          // Releases the item that the worker could not process.
+          // Another worker can come and process it
+          $queue->releaseItem($item);
+          break;
+        }
       }
     }
-
-    return $termTags;
   }
 
-  private function prepareEventListImage(Container $container) {
-    // Create list image object from remote URL.
-    $files = \Drupal::entityTypeManager()
-      ->getStorage('file')
-      ->loadByProperties(['uri' => $container->getListImage()]);
-    $listImage = reset($files);
-
-    // if not create a file
-    if (!$listImage) {
-      $listImage = File::create([
-        'uri' => $container->getListImage(),
-      ]);
-      $listImage->save();
+  /**
+   * Batch finished callback.
+   */
+  public static function batchFinished($success, $results, $operations) {
+    if ($success) {
+      drupal_set_message(t('All content has been correctly scrapped.'));
     }
-
-    return $listImage->id();
-  }
-
-  private function prepareEventTitleImage(Container $container) {
-    // Create title image object from remote URL.
-    $files = \Drupal::entityTypeManager()
-      ->getStorage('file')
-      ->loadByProperties(['uri' => $container->getTitleImage()]);
-    $titleImage = reset($files);
-
-    // if not create a file
-    if (!$titleImage) {
-      $titleImage = File::create([
-        'uri' => $container->getTitleImage(),
-      ]);
-      $titleImage->save();
+    else {
+      $error_operation = reset($operations);
+      drupal_set_message(t('An error occurred while processing @operation with arguments : @args', array('@operation' => $error_operation[0], '@args' => print_r($error_operation[0], TRUE))));
     }
-
-    return $titleImage->id();
   }
-
-  private function prepareEventDate(Container $container) {
-    $mapping = ['januari' => '01', 'februari' => '02', 'mars' => '03', 'april' => '04', 'maj' => '05', 'juni' => '06', 'juli' => '07', 'augusti' => '08', 'september' => '09', 'oktober' => '10', 'november' => '11','december' => '12'];
-    $year = date("Y");
-    $month = $mapping[$container->getMonth()];
-    $date = $container->getDate();
-    $hours = explode(' – ', $container->getTime());
-
-    $startEvent = \DateTime::createFromFormat('Y-m-d\TH:i:s', "$year-$month-$date" . "T" . "$hours[0]:00");
-    $endEvent = \DateTime::createFromFormat('Y-m-d\TH:i:s', "$year-$month-$date" . "T" . "$hours[1]:00");
-
-    return [$startEvent, $endEvent];
-  }
-
 }
