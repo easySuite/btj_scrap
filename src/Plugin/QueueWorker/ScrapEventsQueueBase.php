@@ -65,21 +65,13 @@ class ScrapEventsQueueBase extends QueueWorkerBase implements
   }
 
   public function createContent(EventContainerInterface $container) {
-    $nodes = \Drupal::entityTypeManager()
-      ->getStorage('node')
-      ->loadByProperties([
-        'title' => $container->getTitle(),
-        'field_ding_event_date' => $this->prepareEventDate($container),
-        ]
-      );
-    $nodes;
     $node = Node::create([
       'type' => 'ding_event',
       'title' => $container->getTitle(),
       'field_ding_event_list_image' => [
         'target_id' => $this->prepareEventListImage($container),
       ],
-      /*      'field_ding_event_title_image' => [
+/*      'field_ding_event_title_image' => [
               'target_id' => $this->prepareEventTitleImage($container),
             ],*/
       'field_ding_event_lead' => $container->getLead(),

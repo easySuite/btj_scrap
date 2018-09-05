@@ -7,24 +7,34 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\group\Entity\GroupInterface;
 use Drupal\Core\Queue\QueueWorkerManager;
 use Drupal\Core\Queue\QueueFactory;
-use phpDocumentor\Reflection\DocBlock\Tags\Var_;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-
 use BTJ\Scrapper\Transport\GouteHttpTransport;
 use BTJ\Scrapper\Service\CSLibraryService;
 use BTJ\Scrapper\Service\AxiellLibraryService;
 use BTJ\Scrapper\Crawler;
-use BTJ\Scrapper\Container\Container;
-use BTJ\Scrapper\Container\EventContainerInterface;
 use BTJ\Scrapper\Container\EventContainer;
-use BTJ\Scrapper\Container\NewsContainerInterface;
 use BTJ\Scrapper\Container\NewsContainer;
-use BTJ\Scrapper\Container\LibraryContainerInterface;
 use BTJ\Scrapper\Container\LibraryContainer;
 
 define("BTJ_SCRAP_BATCH_SIZE", 1);
 
 class ScrapController extends ControllerBase {
+
+  public function library() {
+//    $url = 'https://bibliotek.ekero.se/58ca5c6c90cba22d5042c344-sv?type=library-page';
+//    $url = 'https://bibliotek.ekero.se/58ca5bb490cba22d5042c33a-sv?type=library-page';
+    $url = 'https://bibliotek.ekero.se/58ca58ae90cba22d5042c313-sv?type=library-pagee';
+    $container = new LibraryContainer();
+    $transport = new GouteHttpTransport();
+    $scrapper = new CSLibraryService($transport);
+    $scrapper->libraryScrap($url, $container);
+    $container->getOpeningHours();
+    $a = 1;
+    return [
+      '#markup' => $container->getTitle(),
+    ];
+  }
+
   /**
    * @var QueueFactory
    */
@@ -38,15 +48,6 @@ class ScrapController extends ControllerBase {
   public function __construct(QueueFactory $queue_factory, QueueWorkerManager $queue_manager) {
     $this->queue_factory = $queue_factory;
     $this->queue_manager = $queue_manager;
-
-    // Events group url
-    //     $url = 'https://bibliotek.ekero.se/calendar/html?fDateMin=2018-01-01';
-    //    $url = 'https://bibliotek.ekero.se/sv/event/fotografera-med-ett-proffs/496b1857-7ac4-4286-8a44-74ce6ab8b2c7';
-    // News group url
-    //    $url = 'https://bibliotek.ekero.se/search?fType=news#content-results';
-    //    $url = 'https://bibliotek.ekero.se/sv/news/usha-balasundaram-fick-barnens-eget-trolldiplom-2017';
-
-    //    $url = 'https://bibliotek.ekero.se/58ca5c6c90cba22d5042c344-sv?type=library-page';
   }
 
   /**
@@ -104,6 +105,7 @@ class ScrapController extends ControllerBase {
       $item->data = [
         'link' => $url . $link,
         'type' => $type,
+        'municipality' => $group->id(),
       ];
 
       $queue->createItem($item);
@@ -116,7 +118,7 @@ class ScrapController extends ControllerBase {
     // Create batch which collects all the specified queue items and process them one after another
     $batch = [
       'title' => $this->t('Scrap and import @entity from <i>@municipality</i>',
-        ['@entity' => $entity, '@municipality' => $group->label()]),
+      ['@entity' => $entity, '@municipality' => $group->label()]),
       'operations' => [],
       'finished' => 'Drupal\btj_scrap\Controller\ScrapController::batchFinished',
     ];
@@ -124,6 +126,7 @@ class ScrapController extends ControllerBase {
     // Get the queue implementation for import_content_from_xml queue
     $queue_factory = \Drupal::service('queue');
     $queue = $queue_factory->get("btj_scrap_$entity");
+    $items = $queue->numberOfItems();
 
     // Count number of the items in this queue, and create enough batch operations
     for($i = 0; $i < ceil($queue->numberOfItems() / BTJ_SCRAP_BATCH_SIZE); $i++) {
@@ -173,11 +176,11 @@ class ScrapController extends ControllerBase {
    */
   public static function batchFinished($success, $results, $operations) {
     if ($success) {
-      drupal_set_message(t('All content has been correctly scrapped.'));
+      \Drupal::messenger()->addMessage(t('All content has been correctly scrapped.'));
     }
     else {
       $error_operation = reset($operations);
-      drupal_set_message(t('An error occurred while processing @operation with arguments : @args', array('@operation' => $error_operation[0], '@args' => print_r($error_operation[0], TRUE))));
+      \Drupal::messenger()->addMessage(t('An error occurred while processing @operation with arguments : @args', array('@operation' => $error_operation[0], '@args' => print_r($error_operation[0], TRUE))));
     }
   }
 }

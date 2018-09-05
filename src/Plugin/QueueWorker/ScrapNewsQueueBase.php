@@ -101,9 +101,13 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
 
   private function prepareNewsListImage(NewsContainerInterface $container) {
     // Create list image object from remote URL.
+    $list_image = $container->getListImage();
+    if (empty($list_image)) {
+      return '';
+    }
     $files = \Drupal::entityTypeManager()
       ->getStorage('file')
-      ->loadByProperties(['uri' => $container->getListImage()]);
+      ->loadByProperties(['uri' => $list_image]);
     $listImage = reset($files);
 
     // if not create a file
@@ -140,6 +144,7 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
 
   private function prepareNewsTags(NewsContainerInterface $container) {
     $tags = $container->getTags();
+    $termTags = [];
 
     foreach ($tags as $tag) {
       $query = \Drupal::entityQuery('taxonomy_term');

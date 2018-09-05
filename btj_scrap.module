@@ -1,6 +1,5 @@
 <?php
 
-use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\Core\Render\Element;
 
@@ -13,20 +12,20 @@ function btj_scrap_group_view_alter(array &$build,
 
   if (!empty($build['field_scrap_libraries'])) {
     foreach (Element::children($build['field_scrap_libraries']) as $key) {
-      $libraryUrl = Url::fromUserInput("/scrap/" . $entity->id() . '/library');
-      $build['field_scrap_libraries'][$key]['#url'] = $libraryUrl;
+      $url = Url::fromUserInput("/scrap/" . $entity->id() . '/libraries');
+      $build['field_scrap_libraries'][$key]['#url'] = $url;
     }
   }
   if (!empty($build['field_scrap_events'])) {
     foreach (Element::children($build['field_scrap_events']) as $key) {
-      $libraryUrl = Url::fromUserInput("/scrap/" . $entity->id() . '/events');
-      $build['field_scrap_events'][$key]['#url'] = $libraryUrl;
+      $url = Url::fromUserInput("/scrap/" . $entity->id() . '/events');
+      $build['field_scrap_events'][$key]['#url'] = $url;
     }
   }
   if (!empty($build['field_scrap_news'])) {
     foreach (Element::children($build['field_scrap_events']) as $key) {
-      $libraryUrl = Url::fromUserInput("/scrap/" . $entity->id() . '/news');
-      $build['field_scrap_news'][$key]['#url'] = $libraryUrl;
+      $url = Url::fromUserInput("/scrap/" . $entity->id() . '/news');
+      $build['field_scrap_news'][$key]['#url'] = $url;
     }
   }
 }

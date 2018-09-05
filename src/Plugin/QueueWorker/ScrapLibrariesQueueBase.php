@@ -9,9 +9,9 @@ namespace Drupal\btj_scrap\Plugin\QueueWorker;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
-use Drupal\Core\Queue\SuspendQueueException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\node\Entity\Node;
+use Drupal\file\Entity\File;
 use BTJ\Scrapper\Transport\GouteHttpTransport;
 use BTJ\Scrapper\Service\CSLibraryService;
 use BTJ\Scrapper\Service\AxiellLibraryService;
@@ -44,6 +44,7 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
     // Get the content array
     $url = $item->data['link'];
     $type = $item->data['type'];
+    $municipality = $item->data['municipality'];
 
     $transport = new GouteHttpTransport();
 
@@ -62,7 +63,7 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
     $scrapper->libraryScrap($url, $container);
 
     // Create node from the array
-    $this->createContent($container);
+    $this->createContent($container, $municipality);
   }
 
   /**
@@ -70,16 +71,60 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  protected function createContent(LibraryContainerInterface $container) {
+  protected function createContent(LibraryContainerInterface $container, int $municipality) {
     // Create node object from the $content array
     $node = Node::create([
       'type'  => 'ding_library',
       'title' => $container->getTitle(),
+      'field_municipality' => [
+        'target_id' => $municipality,
+      ],
+      'field_ding_library_title_image' => [
+        'target_id' => $this->prepareImage($container->getTitleImage()),
+      ],
       'field_ding_library_body'  => [
         'value' => $container->getBody(),
         'format' => 'basic_html',
       ],
+      'field_ding_library_addresse' => [
+        'country_code' => 'SE',
+        'locality' => $container->getCity(),
+        'address_line1' => $container->getStreet(),
+        'postal_code' => $container->getZip(),
+      ],
+      'field_ding_library_mail' => $container->getEmail(),
+      'field_ding_library_phone_number' => $container->getPhone(),
+      'field_ding_library_opening_hours' => $this->prepareHours($container->getOpeningHours()),
     ]);
+
     $node->save();
+  }
+
+  private function prepareImage(string $url) {
+    // Create list image object from remote URL.
+    $files = \Drupal::entityTypeManager()
+      ->getStorage('file')
+      ->loadByProperties(['uri' => $url]);
+    $image = reset($files);
+
+    if (!$image) {
+      $image = File::create([
+        'uri' => $url,
+      ]);
+      $image->save();
+    }
+
+    return $image->id();
+  }
+
+  private function prepareHours($hours) {
+    array_walk($hours, function (&$day, $key) {
+      list($start, $end) = explode('-', $day);
+      $start = implode('', explode(':', $start));
+      $end = implode('', explode(':', $end));
+      $day = ((int) $start) ? ['day' => $key, 'starthours' => $start, 'endhours' => $end] : [];
+    });
+
+    return $hours;
   }
 }
