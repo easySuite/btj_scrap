@@ -1,11 +1,14 @@
 {
-  "repositories": [
-    {
-      "type": "git",
-      "url": "https://github.com/easySuite/BTJScrapping"
+    "name": "btj/scrapper",
+    "type": "drupal-custom-module",
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/easySuite/BTJWorker"
+        }
+    ],
+    "require": {
+        "btj/worker": "dev-EASYOPAC-921"
     }
-  ],
-  "require": {
-    "btj/scrapper": "dev-EASYOPAC-921"
-  }
 }
+
