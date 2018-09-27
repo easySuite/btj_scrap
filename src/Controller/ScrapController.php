@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\btj_scrap\Controller;
+namespace Drupal\btj_scrapper\Controller;
 
 
 use Drupal\Core\Controller\ControllerBase;
@@ -29,9 +29,8 @@ class ScrapController extends ControllerBase {
     $scrapper = new CSLibraryService($transport);
     $scrapper->libraryScrap($url, $container);
     $container->getOpeningHours();
-    $a = 1;
     return [
-      '#markup' => $container->getTitle(),
+      '#markup' => $container->getBody(),
     ];
   }
 
@@ -120,7 +119,7 @@ class ScrapController extends ControllerBase {
       'title' => $this->t('Scrap and import @entity from <i>@municipality</i>',
       ['@entity' => $entity, '@municipality' => $group->label()]),
       'operations' => [],
-      'finished' => 'Drupal\btj_scrap\Controller\ScrapController::batchFinished',
+      'finished' => 'Drupal\btj_scrapper\Controller\ScrapController::batchFinished',
     ];
 
     // Get the queue implementation for import_content_from_xml queue
@@ -131,7 +130,7 @@ class ScrapController extends ControllerBase {
     // Count number of the items in this queue, and create enough batch operations
     for($i = 0; $i < ceil($queue->numberOfItems() / BTJ_SCRAP_BATCH_SIZE); $i++) {
       // Create batch operations
-      $batch['operations'][] = array('Drupal\btj_scrap\Controller\ScrapController::import', [$entity]);
+      $batch['operations'][] = array('Drupal\btj_scrapper\Controller\ScrapController::import', [$entity]);
     }
 
     // Adds the batch sets

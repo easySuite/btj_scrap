@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains Drupal\btj_scrap\Plugin\QueueWorker\ImportContentFromXMLQueueBase
+ * Contains Drupal\btj_scrapper\Plugin\QueueWorker\ImportContentFromXMLQueueBase
  */
 
-namespace Drupal\btj_scrap\Plugin\QueueWorker;
+namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;

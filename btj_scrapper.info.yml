@@ -1,4 +1,4 @@
-name: 'BTJ Scrapping'
+name: 'BTJ Scrapper'
 description: 'Integrate Goutte library to scrap content from Sweden library
 CMS.'
 type: module

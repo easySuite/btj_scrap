@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\btj_scrap\Plugin\QueueWorker;
+namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 
 /**
  * Create node object from the imported scrapped content.

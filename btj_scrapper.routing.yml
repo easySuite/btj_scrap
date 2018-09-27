@@ -1,14 +1,14 @@
-btj_scrap.scrap:
+btj_scrapper.scrap:
   path: '/scrap/{group}/{entity}'
   defaults:
-    _controller: '\Drupal\btj_scrap\Controller\ScrapController::scrap'
+    _controller: '\Drupal\btj_scrapper\Controller\ScrapController::scrap'
     _title: 'Scrap Content'
   requirements:
     _permission: 'access content'
-btj_scrap.library:
+btj_scrapper.library:
   path: '/library'
   defaults:
-    _controller: '\Drupal\btj_scrap\Controller\ScrapController::library'
+    _controller: '\Drupal\btj_scrapper\Controller\ScrapController::library'
     _title: 'Scrap library'
   requirements:
     _permission: 'access content'
