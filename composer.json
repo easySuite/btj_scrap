@@ -1,14 +1,5 @@
 {
     "name": "btj/btj_scrapper",
-    "type": "drupal-custom-module",
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/easySuite/BTJWorker"
-        }
-    ],
-    "require": {
-        "btj/worker": "dev-EASYOPAC-921"
-    }
+    "type": "drupal-custom-module"
 }
 
