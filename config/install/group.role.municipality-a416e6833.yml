@@ -1,0 +1,17 @@
+uuid: f577d0a7-bd58-4294-a558-c21b21d62ae2
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.municipality
+  enforced:
+    config:
+      - user.role.administrator
+id: municipality-a416e6833
+label: Administrator
+weight: 2
+internal: true
+audience: outsider
+group_type: municipality
+permissions_ui: false
+permissions: {  }

@@ -1,0 +1,17 @@
+uuid: f9aedd63-40b2-41a8-9652-6c7465191292
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.municipality
+  enforced:
+    config:
+      - user.role.editor
+id: municipality-0b0baeca9
+label: editor
+weight: 3
+internal: true
+audience: outsider
+group_type: municipality
+permissions_ui: false
+permissions: {  }

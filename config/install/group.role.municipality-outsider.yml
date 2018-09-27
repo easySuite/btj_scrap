@@ -1,0 +1,14 @@
+uuid: 6e2ba13d-db0f-44f5-8833-058bcfc0a3fc
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.municipality
+id: municipality-outsider
+label: Outsider
+weight: -101
+internal: true
+audience: outsider
+group_type: municipality
+permissions_ui: true
+permissions: {  }

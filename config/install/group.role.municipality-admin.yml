@@ -1,0 +1,23 @@
+uuid: a8d0b59c-fa61-4334-b339-e674b75c4e3c
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.municipality
+id: municipality-admin
+label: Admin
+weight: 100
+internal: false
+audience: member
+group_type: municipality
+permissions_ui: true
+permissions:
+  - 'access content overview'
+  - 'administer group'
+  - 'delete group'
+  - 'edit group'
+  - 'view group'
+  - 'administer members'
+  - 'update own group_membership content'
+  - 'leave group'
+  - 'view group_membership content'

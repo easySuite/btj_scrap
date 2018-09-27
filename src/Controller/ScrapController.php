@@ -23,7 +23,7 @@ class ScrapController extends ControllerBase {
   public function library() {
 //    $url = 'https://bibliotek.ekero.se/58ca5c6c90cba22d5042c344-sv?type=library-page';
 //    $url = 'https://bibliotek.ekero.se/58ca5bb490cba22d5042c33a-sv?type=library-page';
-    $url = 'https://bibliotek.ekero.se/58ca58ae90cba22d5042c313-sv?type=library-pagee';
+    $url = 'https://bibliotek.boras.se/58ec9f8c4781720e6c2038ba-sv?type=library-page';
     $container = new LibraryContainer();
     $transport = new GouteHttpTransport();
     $scrapper = new CSLibraryService($transport);

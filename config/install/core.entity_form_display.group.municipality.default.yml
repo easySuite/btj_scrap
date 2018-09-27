@@ -1,0 +1,61 @@
+uuid: 6466aafe-6e9b-49a4-b39c-efced6cc10f5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.group.municipality.field_agency_id
+    - field.field.group.municipality.field_scrap_events
+    - field.field.group.municipality.field_scrap_libraries
+    - field.field.group.municipality.field_scrap_news
+    - field.field.group.municipality.field_scrapping_type
+    - field.field.group.municipality.field_scrapping_url
+    - group.type.municipality
+  module:
+    - link
+    - path
+id: group.municipality.default
+targetEntityType: group
+bundle: municipality
+mode: default
+content:
+  field_agency_id:
+    weight: 2
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
+    region: content
+  field_scrapping_type:
+    weight: 3
+    settings: {  }
+    third_party_settings: {  }
+    type: options_select
+    region: content
+  field_scrapping_url:
+    weight: 4
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+    type: link_default
+    region: content
+  label:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 1
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  field_scrap_events: true
+  field_scrap_libraries: true
+  field_scrap_news: true
+  uid: true

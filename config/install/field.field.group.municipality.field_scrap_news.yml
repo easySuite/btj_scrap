@@ -1,0 +1,28 @@
+uuid: 81c40374-87c6-4aff-b7d3-19ab31e8aed7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.group.field_scrap_news
+    - group.type.municipality
+  module:
+    - link
+id: group.municipality.field_scrap_news
+field_name: field_scrap_news
+entity_type: group
+bundle: municipality
+label: 'Scrap News'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    attributes: {  }
+    uri: 'internal:/scrap'
+    title: News
+    options: {  }
+default_value_callback: ''
+settings:
+  link_type: 1
+  title: 1
+field_type: link

@@ -1,0 +1,21 @@
+uuid: 414ea5c5-78d8-4d8f-8731-cd38270b5ce5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.group.field_scrapping_type
+    - group.type.municipality
+  module:
+    - options
+id: group.municipality.field_scrapping_type
+field_name: field_scrapping_type
+entity_type: group
+bundle: municipality
+label: 'Scrapping Type'
+description: 'Related CMS where the content is scrapped from'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

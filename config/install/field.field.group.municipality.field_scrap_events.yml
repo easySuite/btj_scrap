@@ -1,0 +1,28 @@
+uuid: 706baf8c-b664-4636-94a1-39a7bbcbbc6e
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.group.field_scrap_events
+    - group.type.municipality
+  module:
+    - link
+id: group.municipality.field_scrap_events
+field_name: field_scrap_events
+entity_type: group
+bundle: municipality
+label: 'Scrap Events'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    attributes: {  }
+    uri: 'internal:/events'
+    title: 'Scrap events'
+    options: {  }
+default_value_callback: ''
+settings:
+  link_type: 1
+  title: 2
+field_type: link

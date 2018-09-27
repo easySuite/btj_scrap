@@ -1,0 +1,27 @@
+uuid: 089ca7aa-8eb6-404b-ac86-37d5712c86d3
+langcode: en
+status: true
+dependencies:
+  module:
+    - group
+    - options
+id: group.field_scrapping_type
+field_name: field_scrapping_type
+entity_type: group
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: cslibrary
+      label: 'CS Library CMS'
+    -
+      value: axiell
+      label: 'Axiell Arena CMS'
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
