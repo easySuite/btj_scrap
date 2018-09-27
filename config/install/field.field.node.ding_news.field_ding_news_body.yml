@@ -1,0 +1,20 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ding_news_body
+    - node.type.ding_news
+  module:
+    - text
+id: node.ding_news.field_ding_news_body
+field_name: field_ding_news_body
+entity_type: node
+bundle: ding_news
+label: Body
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: text_long

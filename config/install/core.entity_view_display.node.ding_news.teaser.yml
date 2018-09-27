@@ -1,0 +1,17 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - node.type.ding_news
+  module:
+    - user
+id: node.ding_news.teaser
+targetEntityType: node
+bundle: ding_news
+mode: teaser
+content:
+  links:
+    weight: 100
+    region: content
+hidden: {  }

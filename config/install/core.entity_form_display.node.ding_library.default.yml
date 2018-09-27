@@ -1,0 +1,226 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.ding_library.field_ding_library_addresse
+    - field.field.node.ding_library.field_ding_library_body
+    - field.field.node.ding_library.field_ding_library_fax_number
+    - field.field.node.ding_library.field_ding_library_geocode
+    - field.field.node.ding_library.field_ding_library_lead
+    - field.field.node.ding_library.field_ding_library_links
+    - field.field.node.ding_library.field_ding_library_mail
+    - field.field.node.ding_library.field_ding_library_opening_hours
+    - field.field.node.ding_library.field_ding_library_phone_number
+    - field.field.node.ding_library.field_ding_library_title_image
+    - field.field.node.ding_library.field_municipality
+    - image.style.thumbnail
+    - node.type.ding_library
+  module:
+    - address
+    - field_group
+    - geofield
+    - image
+    - link
+    - office_hours
+    - path
+    - text
+third_party_settings:
+  field_group:
+    group_ding_library_images:
+      children:
+        - field_ding_library_title_image
+      parent_name: ''
+      weight: 2
+      format_type: details
+      format_settings:
+        id: ''
+        classes: 'group-ding-library-content field-group-fieldset'
+        open: false
+        required_fields: true
+      label: Images
+      region: content
+    group_ding_library_content:
+      children:
+        - field_ding_library_lead
+        - field_ding_library_body
+      parent_name: ''
+      weight: 3
+      format_type: details
+      format_settings:
+        id: ''
+        classes: 'group-ding-library-content field-group-fieldset'
+        open: false
+        required_fields: true
+      label: Content
+      region: content
+    group_ding_library_contact:
+      children:
+        - field_ding_library_addresse
+        - field_ding_library_mail
+        - field_ding_library_fax_number
+        - field_ding_library_phone_number
+      parent_name: ''
+      weight: 4
+      format_type: details
+      format_settings:
+        id: ''
+        classes: 'group-ding-library-contact field-group-fieldset'
+        open: false
+        required_fields: true
+      label: Contact
+      region: content
+    group_ding_library_attachments:
+      children:
+        - field_ding_library_links
+        - field_ding_library_geocode
+      parent_name: ''
+      weight: 5
+      format_type: details
+      format_settings:
+        id: ''
+        classes: ' group-ding-library-attachments field-group-fieldset'
+        open: false
+        required_fields: true
+      label: Links
+      region: content
+id: node.ding_library.default
+targetEntityType: node
+bundle: ding_library
+mode: default
+content:
+  created:
+    type: datetime_timestamp
+    weight: 8
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_ding_library_addresse:
+    weight: 3
+    settings:
+      default_country: null
+    third_party_settings: {  }
+    type: address_default
+    region: content
+  field_ding_library_body:
+    weight: 8
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+    type: text_textarea
+    region: content
+  field_ding_library_fax_number:
+    weight: 5
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
+    region: content
+  field_ding_library_geocode:
+    weight: 10
+    settings:
+      html5_geolocation: false
+    third_party_settings: {  }
+    type: geofield_latlon
+    region: content
+  field_ding_library_lead:
+    weight: 7
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textarea
+    region: content
+  field_ding_library_links:
+    weight: 9
+    settings:
+      placeholder_url: ''
+      placeholder_title: ''
+    third_party_settings: {  }
+    type: link_default
+    region: content
+  field_ding_library_mail:
+    weight: 4
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: email_default
+    region: content
+  field_ding_library_opening_hours:
+    weight: 6
+    settings: {  }
+    third_party_settings: {  }
+    type: office_hours_list
+    region: content
+  field_ding_library_phone_number:
+    weight: 6
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
+    region: content
+  field_ding_library_title_image:
+    weight: 3
+    settings:
+      progress_indicator: throbber
+      preview_image_style: thumbnail
+    third_party_settings: {  }
+    type: image_image
+    region: content
+  field_municipality:
+    weight: 1
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
+    region: content
+  path:
+    type: path
+    weight: 11
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  promote:
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    weight: 9
+    region: content
+    third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    weight: 12
+    region: content
+    third_party_settings: {  }
+  sticky:
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    weight: 10
+    region: content
+    third_party_settings: {  }
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  uid:
+    type: entity_reference_autocomplete
+    weight: 7
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
+    region: content
+    third_party_settings: {  }
+hidden: {  }

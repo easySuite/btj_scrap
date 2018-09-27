@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ding_library_mail
+    - node.type.ding_library
+id: node.ding_library.field_ding_library_mail
+field_name: field_ding_library_mail
+entity_type: node
+bundle: ding_library
+label: E-mail
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: email

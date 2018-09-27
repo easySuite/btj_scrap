@@ -1,6 +1,15 @@
 name: 'BTJ Scrapper'
-description: 'Integrate Goutte library to scrap content from Sweden library
-CMS.'
+description: 'Integrate Goutte library to scrap content from Sweden library CMS.'
 type: module
 package: BTJ
 core: 8.x
+dependencies:
+  - drupal:address
+  - drupal:datetime_range
+  - drupal:field_group
+  - drupal:geofield_map
+  - drupal:geocoder_geofield
+  - drupal:geocoder_address
+  - drupal:geocoder_field
+  - drupal:group
+  - drupal:office_hours

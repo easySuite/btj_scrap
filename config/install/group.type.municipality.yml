@@ -1,0 +1,10 @@
+uuid: ade96a55-d2aa-48ac-b807-e1b699389e50
+langcode: en
+status: true
+dependencies: {  }
+id: municipality
+label: Municipality
+description: 'Group of libraries in a geographic zone under the same agency ID'
+creator_membership: true
+creator_wizard: true
+creator_roles: {  }

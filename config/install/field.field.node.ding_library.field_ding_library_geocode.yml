@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ding_library_geocode
+    - node.type.ding_library
+  module:
+    - geofield
+id: node.ding_library.field_ding_library_geocode
+field_name: field_ding_library_geocode
+entity_type: node
+bundle: ding_library
+label: Geocode
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  backend: geofield_backend_default
+field_type: geofield

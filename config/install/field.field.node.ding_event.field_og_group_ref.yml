@@ -1,0 +1,27 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_og_group_ref
+    - node.type.ding_event
+    - node.type.ding_library
+id: node.ding_event.field_og_group_ref
+field_name: field_og_group_ref
+entity_type: node
+bundle: ding_event
+label: Library
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      ding_library: ding_library
+    sort:
+      field: _none
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

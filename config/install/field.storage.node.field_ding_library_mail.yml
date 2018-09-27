@@ -1,0 +1,18 @@
+uuid: 5c1472e2-e2f5-40c6-9648-184474ab6833
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_ding_library_mail
+field_name: field_ding_library_mail
+entity_type: node
+type: email
+settings: {  }
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
