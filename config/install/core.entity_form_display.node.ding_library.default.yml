@@ -152,7 +152,7 @@ content:
     weight: 6
     settings: {  }
     third_party_settings: {  }
-    type: office_hours_list
+    type: office_hours_default
     region: content
   field_ding_library_phone_number:
     weight: 6
