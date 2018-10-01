@@ -6,10 +6,9 @@ use Drupal\Core\Render\Element;
 /**
  * Implements hook_ENTITY_TYPE_view_alter().
  */
-function btj_scrap_group_view_alter(array &$build,
+function btj_scrapper_group_view_alter(array &$build,
   Drupal\Core\Entity\EntityInterface $entity,
   \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
-
   if (!empty($build['field_scrap_libraries'])) {
     foreach (Element::children($build['field_scrap_libraries']) as $key) {
       $url = Url::fromUserInput("/scrap/" . $entity->id() . '/libraries');
