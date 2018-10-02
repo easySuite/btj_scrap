@@ -2,6 +2,8 @@ uuid: 62aab8a1-1384-4c25-b11b-cd81b087faa0
 langcode: en
 status: true
 dependencies: {  }
+_core:
+  default_config_hash: d-8EAya_i5EF8DPMXZ7RZSIC_yae2QZ5iAwaPFRqolU
 name: 'News Category'
 vid: news_category
 description: ''

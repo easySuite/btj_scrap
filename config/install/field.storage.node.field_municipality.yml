@@ -5,6 +5,8 @@ dependencies:
   module:
     - group
     - node
+_core:
+  default_config_hash: QQh_ZKw2zJHiiX11TOxg02AUXuHJc_PvpfS4NVARBnw
 id: node.field_municipality
 field_name: field_municipality
 entity_type: node

@@ -6,6 +6,8 @@ dependencies:
     - file
     - image
     - node
+_core:
+  default_config_hash: AP1_CFhjXSfEw0rQqaveACQJjvkxivmfveH-zs8BjTo
 id: node.field_ding_news_title_image
 field_name: field_ding_news_title_image
 entity_type: node

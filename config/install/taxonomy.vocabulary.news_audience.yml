@@ -1,0 +1,9 @@
+uuid: eaa62d0d-e39d-4134-bd9e-9a353a85e0a6
+langcode: en
+status: true
+dependencies: {  }
+name: 'News audience'
+vid: news_audience
+description: ''
+hierarchy: 0
+weight: 0

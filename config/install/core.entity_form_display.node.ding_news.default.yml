@@ -9,14 +9,82 @@ dependencies:
     - field.field.node.ding_news.field_ding_news_list_image
     - field.field.node.ding_news.field_ding_news_tags
     - field.field.node.ding_news.field_ding_news_title_image
-    - field.field.node.ding_news.field_og_group_ref
+    - field.field.node.ding_news.field_municipality
+    - field.field.node.ding_news.field_news_groups_ref
     - image.style.thumbnail
     - node.type.ding_news
   module:
+    - field_group
     - file
     - image
     - path
     - text
+third_party_settings:
+  field_group:
+    group_ding_news_images:
+      children:
+        - field_ding_news_title_image
+        - field_ding_news_list_image
+      parent_name: ''
+      weight: 1
+      format_type: fieldset
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        required_fields: true
+      label: Images
+    group_ding_news_content:
+      children:
+        - field_ding_news_lead
+        - field_ding_news_body
+      parent_name: ''
+      weight: 2
+      format_type: fieldset
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        required_fields: true
+      label: Content
+    group_ding_news_categorization:
+      children:
+        - field_ding_news_category
+        - field_ding_news_tags
+      parent_name: ''
+      weight: 3
+      format_type: fieldset
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        required_fields: true
+      label: Categorization
+    group_ding_news_attachments:
+      children:
+        - field_ding_news_files
+      parent_name: ''
+      weight: 4
+      format_type: fieldset
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        required_fields: true
+      label: Attachments
+    group_ding_news_relations:
+      children:
+        - field_municipality
+        - field_news_groups_ref
+      parent_name: ''
+      weight: 5
+      format_type: fieldset
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        required_fields: true
+      label: Relations
 id: node.ding_news.default
 targetEntityType: node
 bundle: ding_news
@@ -24,12 +92,12 @@ mode: default
 content:
   created:
     type: datetime_timestamp
-    weight: 10
+    weight: 7
     region: content
     settings: {  }
     third_party_settings: {  }
   field_ding_news_body:
-    weight: 4
+    weight: 2
     settings:
       rows: 5
       placeholder: ''
@@ -43,14 +111,14 @@ content:
     type: options_select
     region: content
   field_ding_news_files:
-    weight: 7
+    weight: 5
     settings:
       progress_indicator: throbber
     third_party_settings: {  }
     type: file_generic
     region: content
   field_ding_news_lead:
-    weight: 3
+    weight: 1
     settings:
       rows: 5
       placeholder: ''
@@ -82,15 +150,27 @@ content:
     third_party_settings: {  }
     type: image_image
     region: content
-  field_og_group_ref:
-    weight: 8
-    settings: {  }
+  field_municipality:
+    weight: 14
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
     third_party_settings: {  }
-    type: options_select
+    type: entity_reference_autocomplete
+    region: content
+  field_news_groups_ref:
+    weight: 15
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
     region: content
   path:
     type: path
-    weight: 13
+    weight: 10
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -98,21 +178,21 @@ content:
     type: boolean_checkbox
     settings:
       display_label: true
-    weight: 11
+    weight: 8
     region: content
     third_party_settings: {  }
   status:
     type: boolean_checkbox
     settings:
       display_label: true
-    weight: 14
+    weight: 11
     region: content
     third_party_settings: {  }
   sticky:
     type: boolean_checkbox
     settings:
       display_label: true
-    weight: 12
+    weight: 9
     region: content
     third_party_settings: {  }
   title:
@@ -125,7 +205,7 @@ content:
     third_party_settings: {  }
   uid:
     type: entity_reference_autocomplete
-    weight: 9
+    weight: 6
     settings:
       match_operator: CONTAINS
       size: 60

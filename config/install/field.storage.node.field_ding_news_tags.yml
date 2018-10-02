@@ -5,6 +5,8 @@ dependencies:
   module:
     - node
     - taxonomy
+_core:
+  default_config_hash: ioOnX35OcUS3Z3aFTDdkNn2OlX5WPsTcZBwnoM7SRpc
 id: node.field_ding_news_tags
 field_name: field_ding_news_tags
 entity_type: node

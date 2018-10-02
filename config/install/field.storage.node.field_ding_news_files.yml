@@ -5,6 +5,8 @@ dependencies:
   module:
     - file
     - node
+_core:
+  default_config_hash: 4VBnj69fdIt-Mr4Trb1UXUunEs0OT3m_Hn7vwVEDZ74
 id: node.field_ding_news_files
 field_name: field_ding_news_files
 entity_type: node
