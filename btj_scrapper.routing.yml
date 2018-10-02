@@ -12,3 +12,10 @@ btj_scrapper.library:
     _title: 'Scrap library'
   requirements:
     _permission: 'access content'
+btj_scrapper.news:
+  path: '/news'
+  defaults:
+    _controller: '\Drupal\btj_scrapper\Controller\ScrapController::news'
+    _title: 'Scrap news'
+  requirements:
+    _permission: 'access content'

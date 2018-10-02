@@ -71,9 +71,9 @@ class ScrapEventsQueueBase extends QueueWorkerBase implements
       'field_ding_event_list_image' => [
         'target_id' => $this->prepareEventListImage($container),
       ],
-/*      'field_ding_event_title_image' => [
-              'target_id' => $this->prepareEventTitleImage($container),
-            ],*/
+      'field_ding_event_title_image' => [
+        'target_id' => $this->prepareEventTitleImage($container),
+      ],
       'field_ding_event_lead' => $container->getLead(),
       'field_ding_event_body' => $container->getBody(),
       'field_ding_event_category' => [

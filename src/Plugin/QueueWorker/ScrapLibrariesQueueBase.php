@@ -84,7 +84,7 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
       ],
       'field_ding_library_body'  => [
         'value' => $container->getBody(),
-        'format' => 'basic_html',
+        'format' => 'full_html',
       ],
       'field_ding_library_addresse' => [
         'country_code' => 'SE',

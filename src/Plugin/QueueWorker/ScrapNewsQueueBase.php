@@ -43,6 +43,7 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
     // Get the content array
     $url = $item->data['link'];
     $type = $item->data['type'];
+    $municipality = $item->data['municipality'];
 
     $transport = new GouteHttpTransport();
 
@@ -61,7 +62,7 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
     $scrapper->newsScrap($url, $container);
 
     // Create node from the array
-    $this->createContent($container);
+    $this->createContent($container, $municipality);
   }
 
   /**
@@ -69,16 +70,20 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
    *
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  protected function createContent(NewsContainerInterface $container) {
+  protected function createContent(NewsContainerInterface $container,  int $municipality) {
     // Create node object from the $content array
     $node = Node::create([
       'type'  => 'ding_news',
       'title' => $container->getTitle(),
       'field_ding_news_body'  => [
         'value'  => $container->getBody(),
+        'format' => 'full_html',
       ],
       'field_ding_news_lead' => [
         'value' => $container->getLead(),
+      ],
+      'field_municipality' => [
+        'target_id' => $municipality,
       ],
     ]);
 
@@ -94,6 +99,11 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
     $tags = $this->prepareNewsTags($container);
     if (!empty($tags)) {
       $node->set('field_ding_news_tags', $tags);
+    }
+
+    $audience = $this->prepareNewsTarget($container);
+    if (!empty($tags)) {
+      $node->set('field_news_groups_ref', $audience);
     }
 
     $node->save();
@@ -156,6 +166,32 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
         $termTag = \Drupal\taxonomy\Entity\Term::create([
           'vid' => 'tags',
           'name' => $tag,
+        ]);
+
+        $termTag->save();
+        $termTags[] = $termTag->id();
+      } else {
+        $termTags[] = reset($tids);
+      }
+    }
+
+    return $termTags;
+  }
+
+  private function prepareNewsTarget(NewsContainerInterface $container) {
+    $terms = $container->getTarget();
+    $termTags = [];
+
+    foreach ($terms as $term) {
+      $query = \Drupal::entityQuery('taxonomy_term');
+      $query->condition('vid', "news_audience");
+      $query->condition('name', $term);
+      $tids = $query->execute();
+
+      if (empty($tids)) {
+        $termTag = \Drupal\taxonomy\Entity\Term::create([
+          'vid' => 'news_audience',
+          'name' => $term,
         ]);
 
         $termTag->save();

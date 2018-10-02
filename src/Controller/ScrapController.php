@@ -34,6 +34,18 @@ class ScrapController extends ControllerBase {
     ];
   }
 
+  public function news() {
+    $url = 'https://bibliotek.boras.se/sv/news/nominerade-till-augustpriset-2017';
+    $container = new NewsContainer();
+    $transport = new GouteHttpTransport();
+    $scrapper = new CSLibraryService($transport);
+    $scrapper->newsScrap($url, $container);
+
+    return [
+      '#markup' => $container->getBody(),
+    ];
+  }
+
   /**
    * @var QueueFactory
    */

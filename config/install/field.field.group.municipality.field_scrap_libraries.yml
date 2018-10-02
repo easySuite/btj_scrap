@@ -1,4 +1,3 @@
-uuid: f63a818c-5754-4f9b-b440-456e5364b84d
 langcode: en
 status: true
 dependencies:
@@ -19,7 +18,7 @@ default_value:
   -
     attributes: {  }
     uri: 'internal:/libraries'
-    title: 'Scrap libraries'
+    title: 'Scrap Libraries'
     options: {  }
 default_value_callback: ''
 settings:
