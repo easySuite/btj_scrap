@@ -19,3 +19,10 @@ btj_scrapper.news:
     _title: 'Scrap news'
   requirements:
     _permission: 'access content'
+btj_scrapper.event:
+  path: '/event'
+  defaults:
+    _controller: '\Drupal\btj_scrapper\Controller\ScrapController::event'
+    _title: 'Scrap event'
+  requirements:
+    _permission: 'access content'

@@ -35,11 +35,24 @@ class ScrapController extends ControllerBase {
   }
 
   public function news() {
-    $url = 'https://bibliotek.boras.se/sv/news/nominerade-till-augustpriset-2017';
+    $url = 'https://bibliotek.boras.se/sv/news/anna-clara-tidholm';
     $container = new NewsContainer();
     $transport = new GouteHttpTransport();
     $scrapper = new CSLibraryService($transport);
     $scrapper->newsScrap($url, $container);
+
+    return [
+      '#markup' => $container->getTitle(),
+    ];
+  }
+
+  public function event() {
+    $url = 'https://bibliotek.boras.se/sv/event/%E2%80%9Dvikten-av-att-l%C3%A4sa-barnlitteratur-p%C3%A5-modersm%C3%A5let-och-genusfr%C3%A5gor-inom-barnlitteraturen/ec3698ea-ef2f-4a24-85d0-12f3fa641e60';
+
+    $container = new EventContainer();
+    $transport = new GouteHttpTransport();
+    $scrapper = new CSLibraryService($transport);
+    $scrapper->eventScrap($url, $container);
 
     return [
       '#markup' => $container->getBody(),
