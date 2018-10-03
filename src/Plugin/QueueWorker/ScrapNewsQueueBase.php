@@ -101,9 +101,9 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
       $node->set('field_ding_news_tags', $tags);
     }
 
-    $audience = $this->prepareNewsTarget($container);
-    if (!empty($audience)) {
-      $node->set('field_news_groups_ref', $audience);
+    $target = $this->prepareNewsTarget($container);
+    if (!empty($target)) {
+      $node->set('field_news_groups_ref', $target);
     }
 
     $node->save();
@@ -184,13 +184,13 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
 
     foreach ($terms as $term) {
       $query = \Drupal::entityQuery('taxonomy_term');
-      $query->condition('vid', "news_audience");
+      $query->condition('vid', "news_target");
       $query->condition('name', $term);
       $tids = $query->execute();
 
       if (empty($tids)) {
         $termTag = \Drupal\taxonomy\Entity\Term::create([
-          'vid' => 'news_audience',
+          'vid' => 'news_target',
           'name' => $term,
         ]);
 

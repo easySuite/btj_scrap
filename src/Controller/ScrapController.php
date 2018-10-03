@@ -47,7 +47,7 @@ class ScrapController extends ControllerBase {
   }
 
   public function event() {
-    $url = 'https://bibliotek.boras.se/sv/event/%E2%80%9Dvikten-av-att-l%C3%A4sa-barnlitteratur-p%C3%A5-modersm%C3%A5let-och-genusfr%C3%A5gor-inom-barnlitteraturen/ec3698ea-ef2f-4a24-85d0-12f3fa641e60';
+    $url = 'https://bibliotek.boras.se/sv/event/samh%C3%A4llsv%C3%A4gledning-1';
 
     $container = new EventContainer();
     $transport = new GouteHttpTransport();

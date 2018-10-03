@@ -4,7 +4,7 @@ dependencies:
   config:
     - field.storage.node.field_news_groups_ref
     - node.type.ding_news
-    - taxonomy.vocabulary.news_audience
+    - taxonomy.vocabulary.news_target
 id: node.ding_news.field_news_groups_ref
 field_name: field_news_groups_ref
 entity_type: node
@@ -19,7 +19,7 @@ settings:
   handler: 'default:taxonomy_term'
   handler_settings:
     target_bundles:
-      news_audience: news_audience
+      news_target: news_target
     sort:
       field: name
       direction: asc
