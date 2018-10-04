@@ -2,14 +2,14 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.node.field_news_groups_ref
+    - field.storage.node.field_ding_news_target
     - node.type.ding_news
     - taxonomy.vocabulary.news_target
-id: node.ding_news.field_news_groups_ref
-field_name: field_news_groups_ref
+id: node.ding_news.field_ding_news_target
+field_name: field_ding_news_target
 entity_type: node
 bundle: ding_news
-label: Groups
+label: Target
 description: ''
 required: false
 translatable: false

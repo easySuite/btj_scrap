@@ -71,19 +71,27 @@ class ScrapEventsQueueBase extends QueueWorkerBase implements
       'field_ding_event_list_image' => [
         'target_id' => $this->prepareEventListImage($container),
       ],
-      'field_ding_event_title_image' => [
+/*      'field_ding_event_title_image' => [
         'target_id' => $this->prepareEventTitleImage($container),
-      ],
+      ],*/
       'field_ding_event_lead' => $container->getLead(),
-      'field_ding_event_body' => $container->getBody(),
+      'field_ding_event_body' => [
+        'value'  => $container->getBody(),
+        'format' => 'full_html',
+      ],
       'field_ding_event_category' => [
         'target_id' => $this->prepareEventCategory($container),
       ],
       'field_ding_event_tags' => $this->prepareEventTags($container),
       'field_ding_event_price' => $container->getPrice(),
       'field_ding_event_date' => $this->prepareEventDate($container),
+
     ]);
 
+    $target = $this->prepareEventTarget($container);
+    if (!empty($target)) {
+      $node->set('field_ding_event_target', $target);
+    }
     $node->save();
   }
 
@@ -188,5 +196,31 @@ class ScrapEventsQueueBase extends QueueWorkerBase implements
 //    $endEvent = $endEvent ? $endEvent->format('Y-m-d\TH:i:s') : '';
 
     return ['value' => $start, 'end_value' => $end];
+  }
+
+  private function prepareEventTarget(EventContainerInterface $container) {
+    $terms = $container->getTarget();
+    $termTags = [];
+
+    foreach ($terms as $term) {
+      $query = \Drupal::entityQuery('taxonomy_term');
+      $query->condition('vid', "event_target");
+      $query->condition('name', $term);
+      $tids = $query->execute();
+
+      if (empty($tids)) {
+        $termTag = \Drupal\taxonomy\Entity\Term::create([
+          'vid' => 'event_target',
+          'name' => $term,
+        ]);
+
+        $termTag->save();
+        $termTags[] = $termTag->id();
+      } else {
+        $termTags[] = reset($tids);
+      }
+    }
+
+    return $termTags;
   }
 }

@@ -10,7 +10,7 @@ dependencies:
     - field.field.node.ding_news.field_ding_news_tags
     - field.field.node.ding_news.field_ding_news_title_image
     - field.field.node.ding_news.field_municipality
-    - field.field.node.ding_news.field_news_groups_ref
+    - field.field.node.ding_news.field_ding_news_target
     - node.type.ding_news
   module:
     - file
@@ -86,7 +86,7 @@ content:
     third_party_settings: {  }
     type: entity_reference_label
     region: content
-  field_news_groups_ref:
+  field_ding_news_target:
     weight: 108
     label: above
     settings:

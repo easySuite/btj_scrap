@@ -1,10 +1,9 @@
-uuid: 788db6a4-4c9f-4d3b-af21-b6bf6e597261
 langcode: en
 status: true
 dependencies:
   module:
-    - node
-    - taxonomy
+  - node
+  - taxonomy
 id: node.field_ding_event_target
 field_name: field_ding_event_target
 entity_type: node
@@ -13,7 +12,7 @@ settings:
   target_type: taxonomy_term
 module: core
 locked: false
-cardinality: 1
+cardinality: -1
 translatable: true
 indexes: {  }
 persist_with_no_fields: false

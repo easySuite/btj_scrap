@@ -178,9 +178,12 @@ content:
     region: content
   field_ding_event_target:
     weight: 6
-    settings: {  }
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
     third_party_settings: {  }
-    type: options_select
+    type: entity_reference_autocomplete
     region: content
   field_ding_event_title_image:
     weight: 2

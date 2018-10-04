@@ -103,7 +103,7 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
 
     $target = $this->prepareNewsTarget($container);
     if (!empty($target)) {
-      $node->set('field_news_groups_ref', $target);
+      $node->set('field_ding_news_target', $target);
     }
 
     $node->save();

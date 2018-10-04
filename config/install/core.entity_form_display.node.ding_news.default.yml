@@ -10,7 +10,7 @@ dependencies:
     - field.field.node.ding_news.field_ding_news_tags
     - field.field.node.ding_news.field_ding_news_title_image
     - field.field.node.ding_news.field_municipality
-    - field.field.node.ding_news.field_news_groups_ref
+    - field.field.node.ding_news.field_ding_news_target
     - image.style.thumbnail
     - node.type.ding_news
   module:
@@ -75,7 +75,7 @@ third_party_settings:
     group_ding_news_relations:
       children:
         - field_municipality
-        - field_news_groups_ref
+        - field_ding_news_target
       parent_name: ''
       weight: 5
       format_type: fieldset
@@ -159,7 +159,7 @@ content:
     third_party_settings: {  }
     type: entity_reference_autocomplete
     region: content
-  field_news_groups_ref:
+  field_ding_news_target:
     weight: 15
     settings:
       match_operator: CONTAINS

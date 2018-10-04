@@ -5,8 +5,8 @@ dependencies:
   module:
     - node
     - taxonomy
-id: node.field_news_groups_ref
-field_name: field_news_groups_ref
+id: node.field_ding_news_target
+field_name: field_ding_news_target
 entity_type: node
 type: entity_reference
 settings:

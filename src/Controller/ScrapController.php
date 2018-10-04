@@ -47,7 +47,7 @@ class ScrapController extends ControllerBase {
   }
 
   public function event() {
-    $url = 'https://bibliotek.boras.se/sv/event/samh%C3%A4llsv%C3%A4gledning-1';
+    $url = 'https://bibliotek.boras.se/sv/event/teknikcaf%C3%A9/ed551375-2e4f-4384-a2be-48248d6758ea';
 
     $container = new EventContainer();
     $transport = new GouteHttpTransport();
