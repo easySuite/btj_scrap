@@ -1,14 +1,20 @@
 <?php
+/**
+ * @file
+ * Main module hooks implementation.
+ */
 
 use Drupal\Core\Url;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 
 /**
  * Implements hook_ENTITY_TYPE_view_alter().
  */
 function btj_scrapper_group_view_alter(array &$build,
-  Drupal\Core\Entity\EntityInterface $entity,
-  \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
+  EntityInterface $entity,
+  EntityViewDisplayInterface $display) {
   if (!empty($build['field_scrap_libraries'])) {
     foreach (Element::children($build['field_scrap_libraries']) as $key) {
       $url = Url::fromUserInput("/scrap/" . $entity->id() . '/libraries');

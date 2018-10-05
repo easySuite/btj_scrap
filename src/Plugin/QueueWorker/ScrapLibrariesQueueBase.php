@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\btj_scrapper\Plugin\QueueWorker\ImportContentFromXMLQueueBase
- */
-
 namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -17,11 +12,12 @@ use BTJ\Scrapper\Service\CSLibraryService;
 use BTJ\Scrapper\Service\AxiellLibraryService;
 use BTJ\Scrapper\Container\LibraryContainerInterface;
 use BTJ\Scrapper\Container\LibraryContainer;
+
 /**
  * Provides base functionality for the Import Content From XML Queue Workers.
  */
 class ScrapLibrariesQueueBase extends QueueWorkerBase implements
-  ContainerFactoryPluginInterface {
+    ContainerFactoryPluginInterface {
 
   protected $container = NULL;
 
@@ -41,7 +37,7 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
    * {@inheritdoc}
    */
   public function processItem($item) {
-    // Get the content array
+    // Get the content array.
     $url = $item->data['link'];
     $type = $item->data['type'];
     $municipality = $item->data['municipality'];
@@ -62,17 +58,15 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
     $container = new LibraryContainer();
     $scrapper->libraryScrap($url, $container);
 
-    // Create node from the array
+    // Create node from the array.
     $this->createContent($container, $municipality);
   }
 
   /**
-   * @param \BTJ\Scrapper\Container\LibraryContainerInterface $container
-   *
-   * @throws \Drupal\Core\Entity\EntityStorageException
+   * Create library node.
    */
   protected function createContent(LibraryContainerInterface $container, int $municipality) {
-    // Create node object from the $content array
+    // Create node object from the $content array.
     $node = Node::create([
       'type'  => 'ding_library',
       'title' => $container->getTitle(),
@@ -100,6 +94,9 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
     $node->save();
   }
 
+  /**
+   * Prepare image for to be added to field.
+   */
   private function prepareImage(string $url) {
     // Create list image object from remote URL.
     $files = \Drupal::entityTypeManager()
@@ -117,14 +114,22 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
     return $image->id();
   }
 
+  /**
+   * Prepare opening hours array to be saved in field.
+   */
   private function prepareHours($hours) {
     array_walk($hours, function (&$day, $key) {
       list($start, $end) = explode('-', $day);
       $start = implode('', explode(':', $start));
       $end = implode('', explode(':', $end));
-      $day = ((int) $start) ? ['day' => $key, 'starthours' => $start, 'endhours' => $end] : [];
+      $day = ((int) $start) ? [
+        'day' => $key,
+        'starthours' => $start,
+        'endhours' => $end,
+      ] : [];
     });
 
     return $hours;
   }
+
 }

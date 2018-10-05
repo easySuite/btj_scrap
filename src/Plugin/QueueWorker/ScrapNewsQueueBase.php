@@ -1,28 +1,24 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\btj_scrapper\Plugin\QueueWorker\ImportContentFromXMLQueueBase
- */
-
 namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 
 use BTJ\Scrapper\Container\NewsContainer;
 use BTJ\Scrapper\Container\NewsContainerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
-use Drupal\Core\Queue\SuspendQueueException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use \Drupal\node\Entity\Node;
 use \Drupal\file\Entity\File;
+use \Drupal\taxonomy\Entity\Term;
 use BTJ\Scrapper\Transport\GouteHttpTransport;
 use BTJ\Scrapper\Service\CSLibraryService;
 use BTJ\Scrapper\Service\AxiellLibraryService;
+
 /**
  * Provides base functionality for the Import Content From XML Queue Workers.
  */
 class ScrapNewsQueueBase extends QueueWorkerBase implements
-  ContainerFactoryPluginInterface {
+    ContainerFactoryPluginInterface {
 
   /**
    * {@inheritdoc}
@@ -40,7 +36,7 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
    * {@inheritdoc}
    */
   public function processItem($item) {
-    // Get the content array
+    // Get the content array.
     $url = $item->data['link'];
     $type = $item->data['type'];
     $municipality = $item->data['municipality'];
@@ -61,17 +57,15 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
     $container = new NewsContainer();
     $scrapper->newsScrap($url, $container);
 
-    // Create node from the array
+    // Create node from the array.
     $this->createContent($container, $municipality);
   }
 
   /**
-   * @param \BTJ\Scrapper\Container\NewsContainerInterface $container
-   *
-   * @throws \Drupal\Core\Entity\EntityStorageException
+   * Create news node based on container object.
    */
-  protected function createContent(NewsContainerInterface $container,  int $municipality) {
-    // Create node object from the $content array
+  protected function createContent(NewsContainerInterface $container, int $municipality) {
+    // Create node object from the $content array.
     $node = Node::create([
       'type'  => 'ding_news',
       'title' => $container->getTitle(),
@@ -91,7 +85,7 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
     if (!empty($category)) {
       $node->set('field_ding_news_category', $category);
     }
-    $list_image = $this->prepareNewsListImage($container);
+    $list_image = $this->prepareImage($container);
     if (!empty($list_image)) {
       $node->set('field_ding_news_list_image', $list_image);
     }
@@ -109,7 +103,10 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
     $node->save();
   }
 
-  private function prepareNewsListImage(NewsContainerInterface $container) {
+  /**
+   * Get image id from the container object.
+   */
+  private function prepareImage(NewsContainerInterface $container) {
     // Create list image object from remote URL.
     $list_image = $container->getListImage();
     if (empty($list_image)) {
@@ -120,7 +117,6 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
       ->loadByProperties(['uri' => $list_image]);
     $listImage = reset($files);
 
-    // if not create a file
     if (!$listImage) {
       $listImage = File::create([
         'uri' => $container->getListImage(),
@@ -131,6 +127,9 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
     return $listImage->id();
   }
 
+  /**
+   * Prepare news category taxonomy terms.
+   */
   private function prepareNewsCategory(NewsContainerInterface $container) {
     $category = $container->getCategory();
     if (empty($category)) {
@@ -141,17 +140,21 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
     $query->condition('name', $container->getCategory());
     $tids = $query->execute();
     if (empty($tids)) {
-      $category = \Drupal\taxonomy\Entity\Term::create([
+      $category = Term::create([
         'vid' => 'news_category',
         'name' => $container->getCategory(),
       ])->save();
-    } else {
+    }
+    else {
       $category = reset($tids);
     }
 
     return $category;
   }
 
+  /**
+   * Get tags ids in taxonomy.
+   */
   private function prepareNewsTags(NewsContainerInterface $container) {
     $tags = $container->getTags();
     $termTags = [];
@@ -163,14 +166,15 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
       $tids = $query->execute();
 
       if (empty($tids)) {
-        $termTag = \Drupal\taxonomy\Entity\Term::create([
+        $termTag = Term::create([
           'vid' => 'tags',
           'name' => $tag,
         ]);
 
         $termTag->save();
         $termTags[] = $termTag->id();
-      } else {
+      }
+      else {
         $termTags[] = reset($tids);
       }
     }
@@ -178,6 +182,9 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
     return $termTags;
   }
 
+  /**
+   * Prepare target taxonomy term.
+   */
   private function prepareNewsTarget(NewsContainerInterface $container) {
     $terms = $container->getTarget();
     $termTags = [];
@@ -189,18 +196,20 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
       $tids = $query->execute();
 
       if (empty($tids)) {
-        $termTag = \Drupal\taxonomy\Entity\Term::create([
+        $termTag = Term::create([
           'vid' => 'news_target',
           'name' => $term,
         ]);
 
         $termTag->save();
         $termTags[] = $termTag->id();
-      } else {
+      }
+      else {
         $termTags[] = reset($tids);
       }
     }
 
     return $termTags;
   }
+
 }
