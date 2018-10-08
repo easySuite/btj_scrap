@@ -1,0 +1,36 @@
+<?php
+/**
+ * @file
+ * Main module hooks implementation.
+ */
+
+use Drupal\Core\Url;
+use Drupal\Core\Render\Element;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+
+/**
+ * Implements hook_ENTITY_TYPE_view_alter().
+ */
+function btj_scrapper_group_view_alter(array &$build,
+  EntityInterface $entity,
+  EntityViewDisplayInterface $display) {
+  if (!empty($build['field_scrap_libraries'])) {
+    foreach (Element::children($build['field_scrap_libraries']) as $key) {
+      $url = Url::fromUserInput("/scrap/" . $entity->id() . '/libraries');
+      $build['field_scrap_libraries'][$key]['#url'] = $url;
+    }
+  }
+  if (!empty($build['field_scrap_events'])) {
+    foreach (Element::children($build['field_scrap_events']) as $key) {
+      $url = Url::fromUserInput("/scrap/" . $entity->id() . '/events');
+      $build['field_scrap_events'][$key]['#url'] = $url;
+    }
+  }
+  if (!empty($build['field_scrap_news'])) {
+    foreach (Element::children($build['field_scrap_events']) as $key) {
+      $url = Url::fromUserInput("/scrap/" . $entity->id() . '/news');
+      $build['field_scrap_news'][$key]['#url'] = $url;
+    }
+  }
+}

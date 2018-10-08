@@ -1,0 +1,31 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.ding_news.field_ding_news_body
+    - field.field.node.ding_news.field_ding_news_category
+    - field.field.node.ding_news.field_ding_news_files
+    - field.field.node.ding_news.field_ding_news_lead
+    - field.field.node.ding_news.field_ding_news_list_image
+    - field.field.node.ding_news.field_ding_news_tags
+    - field.field.node.ding_news.field_ding_news_title_image
+    - node.type.ding_news
+  module:
+    - user
+id: node.ding_news.teaser
+targetEntityType: node
+bundle: ding_news
+mode: teaser
+content:
+  links:
+    weight: 100
+    region: content
+hidden:
+  field_ding_news_body: true
+  field_ding_news_category: true
+  field_ding_news_files: true
+  field_ding_news_lead: true
+  field_ding_news_list_image: true
+  field_ding_news_tags: true
+  field_ding_news_title_image: true

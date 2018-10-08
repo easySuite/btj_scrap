@@ -1,0 +1,246 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.ding_event.field_ding_event_body
+    - field.field.node.ding_event.field_ding_event_category
+    - field.field.node.ding_event.field_ding_event_date
+    - field.field.node.ding_event.field_ding_event_files
+    - field.field.node.ding_event.field_ding_event_lead
+    - field.field.node.ding_event.field_ding_event_list_image
+    - field.field.node.ding_event.field_ding_event_location
+    - field.field.node.ding_event.field_ding_event_price
+    - field.field.node.ding_event.field_ding_event_tags
+    - field.field.node.ding_event.field_ding_event_target
+    - field.field.node.ding_event.field_ding_event_title_image
+    - field.field.node.ding_event.field_og_group_ref
+    - image.style.thumbnail
+    - node.type.ding_event
+  module:
+    - address
+    - datetime_range
+    - field_group
+    - file
+    - image
+    - path
+    - text
+third_party_settings:
+  field_group:
+    group_ding_event_images:
+      children:
+        - field_ding_event_title_image
+        - field_ding_event_list_image
+      parent_name: ''
+      weight: 1
+      format_type: details
+      format_settings:
+        id: ''
+        classes: 'group-ding-event-images field-group-fieldset'
+        open: false
+        required_fields: true
+      label: Images
+      region: content
+    group_ding_event_conten:
+      children:
+        - field_ding_event_lead
+        - field_ding_event_body
+      parent_name: ''
+      weight: 2
+      format_type: details
+      format_settings:
+        id: ''
+        classes: 'group-ding-event-content field-group-fieldset'
+        open: true
+        required_fields: true
+      label: Content
+      region: content
+    group_ding_event_tagging:
+      children:
+        - field_ding_event_category
+        - field_ding_event_tags
+        - field_ding_event_target
+      parent_name: ''
+      weight: 3
+      format_type: details
+      format_settings:
+        id: ''
+        classes: 'group-ding-event-tagging field-group-fieldset'
+        open: true
+        required_fields: true
+      label: Tagging
+      region: content
+    group_ding_event_date_loc_price:
+      children:
+        - field_ding_event_date
+        - field_ding_event_location
+        - field_og_group_ref
+        - field_ding_event_price
+      parent_name: ''
+      weight: 4
+      format_type: details
+      format_settings:
+        id: ''
+        classes: ' group-ding-event-date-loc-price field-group-fieldset'
+        open: true
+        required_fields: true
+      label: 'Date, location and price'
+      region: content
+    group_ding_event_attachments:
+      children:
+        - field_ding_event_files
+      parent_name: ''
+      weight: 5
+      format_type: details
+      format_settings:
+        id: ''
+        classes: 'group-ding-event-attachments field-group-fieldset'
+        open: false
+        required_fields: true
+      label: Attachments
+      region: content
+id: node.ding_event.default
+targetEntityType: node
+bundle: ding_event
+mode: default
+content:
+  created:
+    type: datetime_timestamp
+    weight: 8
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_ding_event_body:
+    weight: 4
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+    type: text_textarea
+    region: content
+  field_ding_event_category:
+    weight: 4
+    settings: {  }
+    third_party_settings: {  }
+    type: options_select
+    region: content
+  field_ding_event_date:
+    weight: 5
+    settings: {  }
+    third_party_settings: {  }
+    type: daterange_default
+    region: content
+  field_ding_event_files:
+    weight: 6
+    settings:
+      progress_indicator: throbber
+    third_party_settings: {  }
+    type: file_generic
+    region: content
+  field_ding_event_lead:
+    weight: 3
+    settings:
+      rows: 5
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textarea
+    region: content
+  field_ding_event_list_image:
+    weight: 3
+    settings:
+      progress_indicator: throbber
+      preview_image_style: thumbnail
+    third_party_settings: {  }
+    type: image_image
+    region: content
+  field_ding_event_location:
+    weight: 6
+    settings:
+      default_country: SE
+    third_party_settings: {  }
+    type: address_default
+    region: content
+  field_ding_event_price:
+    weight: 8
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: string_textfield
+    region: content
+  field_ding_event_tags:
+    weight: 5
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
+    region: content
+  field_ding_event_target:
+    weight: 6
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+    type: entity_reference_autocomplete
+    region: content
+  field_ding_event_title_image:
+    weight: 2
+    settings:
+      progress_indicator: throbber
+      preview_image_style: thumbnail
+    third_party_settings: {  }
+    type: image_image
+    region: content
+  field_og_group_ref:
+    weight: 7
+    settings: {  }
+    third_party_settings: {  }
+    type: options_select
+    region: content
+  path:
+    type: path
+    weight: 11
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  promote:
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    weight: 9
+    region: content
+    third_party_settings: {  }
+  status:
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    weight: 12
+    region: content
+    third_party_settings: {  }
+  sticky:
+    type: boolean_checkbox
+    settings:
+      display_label: true
+    weight: 10
+    region: content
+    third_party_settings: {  }
+  title:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  uid:
+    type: entity_reference_autocomplete
+    weight: 7
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
+    region: content
+    third_party_settings: {  }
+hidden: {  }

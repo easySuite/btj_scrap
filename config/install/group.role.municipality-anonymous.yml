@@ -1,0 +1,14 @@
+uuid: 35c8a616-8244-4a2b-832a-533bcca57199
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.municipality
+id: municipality-anonymous
+label: Anonymous
+weight: -102
+internal: true
+audience: anonymous
+group_type: municipality
+permissions_ui: true
+permissions: {  }

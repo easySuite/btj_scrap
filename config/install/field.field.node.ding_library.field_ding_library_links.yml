@@ -1,0 +1,22 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ding_library_links
+    - node.type.ding_library
+  module:
+    - link
+id: node.ding_library.field_ding_library_links
+field_name: field_ding_library_links
+entity_type: node
+bundle: ding_library
+label: Links
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  link_type: 17
+  title: 1
+field_type: link

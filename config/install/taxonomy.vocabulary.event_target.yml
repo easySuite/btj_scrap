@@ -1,0 +1,9 @@
+uuid: 2a1a294f-7b6c-4aa7-8521-69ac0e482334
+langcode: en
+status: true
+dependencies: {  }
+name: 'Event target'
+vid: event_target
+description: ''
+hierarchy: 0
+weight: 0

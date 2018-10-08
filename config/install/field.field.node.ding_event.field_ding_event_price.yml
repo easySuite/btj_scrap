@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ding_event_price
+    - node.type.ding_event
+id: node.ding_event.field_ding_event_price
+field_name: field_ding_event_price
+entity_type: node
+bundle: ding_event
+label: Price
+description: "Events show the value ”Free” if text field is set to 0.\r\nTip: Indicate different ticket prices for more than one audience group by entering a lowest – highest price in text field fx. “30 - 50”"
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

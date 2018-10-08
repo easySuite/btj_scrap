@@ -1,0 +1,28 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ding_news_target
+    - node.type.ding_news
+    - taxonomy.vocabulary.news_target
+id: node.ding_news.field_ding_news_target
+field_name: field_ding_news_target
+entity_type: node
+bundle: ding_news
+label: Target
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      news_target: news_target
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

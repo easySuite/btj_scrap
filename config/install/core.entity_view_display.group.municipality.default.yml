@@ -1,0 +1,95 @@
+uuid: 4537908a-399a-49e2-bce0-b0cd8c3ac3c4
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.group.municipality.field_agency_id
+    - field.field.group.municipality.field_scrap_events
+    - field.field.group.municipality.field_scrap_libraries
+    - field.field.group.municipality.field_scrap_news
+    - field.field.group.municipality.field_scrapping_type
+    - field.field.group.municipality.field_scrapping_url
+    - group.type.municipality
+  module:
+    - link
+    - options
+id: group.municipality.default
+targetEntityType: group
+bundle: municipality
+mode: default
+content:
+  field_agency_id:
+    weight: -4
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  field_scrap_events:
+    weight: 1
+    label: hidden
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    type: link
+    region: content
+  field_scrap_libraries:
+    weight: -1
+    label: hidden
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: '0'
+      target: '0'
+    third_party_settings: {  }
+    type: link
+    region: content
+  field_scrap_news:
+    weight: 0
+    label: hidden
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    type: link
+    region: content
+  field_scrapping_type:
+    weight: -3
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: list_default
+    region: content
+  field_scrapping_url:
+    weight: -2
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    type: link
+    region: content
+  label:
+    label: hidden
+    type: string
+    weight: -5
+    region: content
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+hidden:
+  changed: true
+  created: true
+  uid: true

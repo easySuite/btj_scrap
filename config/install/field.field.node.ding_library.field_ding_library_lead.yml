@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ding_library_lead
+    - node.type.ding_library
+id: node.ding_library.field_ding_library_lead
+field_name: field_ding_library_lead
+entity_type: node
+bundle: ding_library
+label: Lead
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

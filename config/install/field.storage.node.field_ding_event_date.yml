@@ -1,0 +1,20 @@
+uuid: f541d986-4463-4667-b2b5-ccf63e430011
+langcode: en
+status: true
+dependencies:
+  module:
+    - datetime_range
+    - node
+id: node.field_ding_event_date
+field_name: field_ding_event_date
+entity_type: node
+type: daterange
+settings:
+  datetime_type: allday
+module: datetime_range
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

@@ -1,0 +1,28 @@
+btj_scrapper.scrap:
+  path: '/scrap/{group}/{entity}'
+  defaults:
+    _controller: '\Drupal\btj_scrapper\Controller\ScrapController::scrap'
+    _title: 'Scrap Content'
+  requirements:
+    _permission: 'access content'
+btj_scrapper.library:
+  path: '/library'
+  defaults:
+    _controller: '\Drupal\btj_scrapper\Controller\ScrapController::library'
+    _title: 'Scrap library'
+  requirements:
+    _permission: 'access content'
+btj_scrapper.news:
+  path: '/news'
+  defaults:
+    _controller: '\Drupal\btj_scrapper\Controller\ScrapController::news'
+    _title: 'Scrap news'
+  requirements:
+    _permission: 'access content'
+btj_scrapper.event:
+  path: '/event'
+  defaults:
+    _controller: '\Drupal\btj_scrapper\Controller\ScrapController::event'
+    _title: 'Scrap event'
+  requirements:
+    _permission: 'access content'

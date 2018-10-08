@@ -1,0 +1,8 @@
+langcode: en
+status: true
+dependencies: {  }
+name: 'News target'
+vid: news_target
+description: ''
+hierarchy: 0
+weight: 0

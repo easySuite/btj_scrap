@@ -1,0 +1,19 @@
+uuid: ecaa1438-4aba-41fb-b084-d220f5ca7e0b
+langcode: en
+status: true
+dependencies:
+  module:
+    - group
+    - link
+id: group.field_scrapping_url
+field_name: field_scrapping_url
+entity_type: group
+type: link
+settings: {  }
+module: link
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

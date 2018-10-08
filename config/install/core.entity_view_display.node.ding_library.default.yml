@@ -1,0 +1,203 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.ding_library.field_ding_library_addresse
+    - field.field.node.ding_library.field_ding_library_body
+    - field.field.node.ding_library.field_ding_library_fax_number
+    - field.field.node.ding_library.field_ding_library_geocode
+    - field.field.node.ding_library.field_ding_library_lead
+    - field.field.node.ding_library.field_ding_library_links
+    - field.field.node.ding_library.field_ding_library_mail
+    - field.field.node.ding_library.field_ding_library_opening_hours
+    - field.field.node.ding_library.field_ding_library_phone_number
+    - field.field.node.ding_library.field_ding_library_title_image
+    - field.field.node.ding_library.field_municipality
+    - node.type.ding_library
+  module:
+    - address
+    - geofield_map
+    - image
+    - link
+    - office_hours
+    - text
+    - user
+id: node.ding_library.default
+targetEntityType: node
+bundle: ding_library
+mode: default
+content:
+  field_ding_library_addresse:
+    weight: 106
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: address_default
+    region: content
+  field_ding_library_body:
+    weight: 105
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: text_default
+    region: content
+  field_ding_library_fax_number:
+    weight: 110
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  field_ding_library_geocode:
+    weight: 112
+    label: above
+    settings:
+      map_dimensions:
+        width: 280px
+        height: 280px
+      map_empty:
+        empty_behaviour: '0'
+        empty_message: 'No Geofield Value entered for this field'
+      map_center:
+        lat: '42'
+        lon: '12.5'
+        center_force: 0
+        geocode: 'Find my location'
+      map_zoom_and_pan:
+        zoom:
+          initial: '14'
+          min: '5'
+          max: '22'
+          force: 0
+        gestureHandling: auto
+        scrollwheel: '1'
+        draggable: '1'
+        map_reset: 0
+      map_controls:
+        disable_default_ui: '1'
+        zoom_control: '1'
+        map_type_id: roadmap
+        map_type_control_options_type_ids:
+          roadmap: roadmap
+          satellite: 0
+          hybrid: 0
+          terrain: 0
+        map_type_control: 0
+        scale_control: 0
+        street_view_control: 0
+        fullscreen_control: 0
+      map_marker_and_infowindow:
+        icon_image_mode: icon_file
+        icon_file_wrapper:
+          icon_file:
+            fids: ''
+            upload_button: Upload
+            remove_button: Remove
+            upload: ''
+          image_style: geofield_map_default_icon_style
+        icon_image_path: ''
+        infowindow_field: title
+        view_mode: full
+        multivalue_split: 0
+        force_open: 0
+      map_additional_options: ''
+      map_oms:
+        map_oms_control: '1'
+        map_oms_options: '{"markersWontMove":"true","markersWontHide":"true","basicFormatEvents":"true","nearbyDistance":3}'
+      custom_style_map:
+        custom_style_name: ''
+        custom_style_options: ''
+        custom_style_control: 0
+        custom_style_default: 0
+      map_markercluster:
+        markercluster_additional_options: ''
+        markercluster_control: 0
+      gmap_api_key: ''
+    third_party_settings: {  }
+    type: geofield_google_map
+    region: content
+  field_ding_library_lead:
+    weight: 113
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  field_ding_library_links:
+    weight: 111
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    type: link
+    region: content
+  field_ding_library_mail:
+    weight: 107
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    type: basic_string
+    region: content
+  field_ding_library_opening_hours:
+    weight: 114
+    label: above
+    settings:
+      day_format: long
+      time_format: G
+      compress: false
+      grouped: false
+      show_closed: all
+      closed_format: Closed
+      separator:
+        days: '<br />'
+        grouped_days: ' - '
+        day_hours: ': '
+        hours_hours: '-'
+        more_hours: ', '
+      current_status:
+        position: ''
+        open_text: 'Currently open!'
+        closed_text: 'Currently closed'
+      schema:
+        enabled: false
+      timezone_field: ''
+      office_hours_first_day: ''
+    third_party_settings: {  }
+    type: office_hours
+    region: content
+  field_ding_library_phone_number:
+    weight: 109
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+  field_ding_library_title_image:
+    weight: 103
+    label: above
+    settings:
+      image_style: ''
+      image_link: ''
+    third_party_settings: {  }
+    type: image
+    region: content
+  field_municipality:
+    weight: 102
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    type: entity_reference_label
+    region: content
+  links:
+    weight: 100
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden: {  }

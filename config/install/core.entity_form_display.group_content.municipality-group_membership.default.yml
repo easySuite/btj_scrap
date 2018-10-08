@@ -1,0 +1,37 @@
+uuid: 3a204b9e-70f3-41d7-bdcf-fd7ad72077a8
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.group_content.municipality-group_membership.group_roles
+    - group.content_type.municipality-group_membership
+  module:
+    - path
+id: group_content.municipality-group_membership.default
+targetEntityType: group_content
+bundle: municipality-group_membership
+mode: default
+content:
+  entity_id:
+    type: entity_reference_autocomplete
+    weight: 5
+    settings:
+      match_operator: CONTAINS
+      size: 60
+      placeholder: ''
+    region: content
+    third_party_settings: {  }
+  group_roles:
+    type: options_buttons
+    weight: 31
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+  path:
+    type: path
+    weight: 30
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  uid: true
