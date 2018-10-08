@@ -165,7 +165,6 @@ class ScrapController extends ControllerBase {
     // Get the queue implementation for import_content_from_xml queue.
     $queue_factory = \Drupal::service('queue');
     $queue = $queue_factory->get("btj_scrap_$entity");
-    $items = $queue->numberOfItems();
 
     // Count number of the items in queue, and create enough batch operations.
     for ($i = 0; $i < ceil($queue->numberOfItems() / BTJ_SCRAP_BATCH_SIZE); $i++) {
