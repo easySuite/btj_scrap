@@ -2,14 +2,5 @@
     "name": "btj/btj_scrapper",
     "type": "drupal-module",
     "description": "Provides functionality scrapping content from swedish libraries.",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "git@github.com:easySuite/BTJWorker.git"
-        }
-    ],
-    "require": {
-        "btj/worker": "dev-development",
-    },
     "minimum-stability": "dev"
 }
