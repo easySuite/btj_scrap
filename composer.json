@@ -10,12 +10,6 @@
     ],
     "require": {
         "btj/worker": "dev-development",
-        "drupal/address": "^1.4",
-        "drupal/field_group": "^1.0",
-        "drupal/geocoder": "^2.0@beta",
-        "drupal/geofield_map": "^2.8",
-        "drupal/group": "^1.0@RC",
-        "drupal/office_hours": "^1.1"
     },
     "minimum-stability": "dev"
 }
