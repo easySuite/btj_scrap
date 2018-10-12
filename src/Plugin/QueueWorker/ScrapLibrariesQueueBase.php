@@ -75,6 +75,8 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
       ],
       'field_ding_library_title_image' => [
         'target_id' => $this->prepareImage($container->getTitleImage()),
+        'alt' => $container->getTitle(),
+        'title' => $container->getTitle(),
       ],
       'field_ding_library_body'  => [
         'value' => $container->getBody(),
@@ -98,17 +100,17 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
    * Prepare image for to be added to field.
    */
   private function prepareImage(string $url) {
-    // Create list image object from remote URL.
-    $files = \Drupal::entityTypeManager()
-      ->getStorage('file')
-      ->loadByProperties(['uri' => $url]);
-    $image = reset($files);
-
-    if (!$image) {
-      $image = File::create([
-        'uri' => $url,
-      ]);
-      $image->save();
+    $file = system_retrieve_file($url, NULL, TRUE, FILE_EXISTS_REPLACE);
+    $img = \Drupal::service('file_system')->realpath($file->getFileUri());
+    $type = mime_content_type($img);
+    $ext = FALSE;
+    if ($type) {
+      $extensions = explode('/', $type);
+      $ext = $extensions[1];
+    }
+    if ($ext) {
+      $uri = "{$file->getFileUri()}.{$ext}";
+      $image = file_copy($file, $uri, FILE_EXISTS_REPLACE);
     }
 
     return $image->id();

@@ -79,15 +79,16 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
       'field_municipality' => [
         'target_id' => $municipality,
       ],
+      'field_ding_news_list_image' => [
+        'target_id' => $this->prepareImage($container->getListImage()),
+        'alt' => $container->getTitle(),
+        'title' => $container->getTitle(),
+      ],
     ]);
 
     $category = $this->prepareNewsCategory($container);
     if (!empty($category)) {
       $node->set('field_ding_news_category', $category);
-    }
-    $list_image = $this->prepareImage($container);
-    if (!empty($list_image)) {
-      $node->set('field_ding_news_list_image', $list_image);
     }
 
     $tags = $this->prepareNewsTags($container);
@@ -106,25 +107,28 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
   /**
    * Get image id from the container object.
    */
-  private function prepareImage(NewsContainerInterface $container) {
-    // Create list image object from remote URL.
-    $list_image = $container->getListImage();
-    if (empty($list_image)) {
-      return '';
-    }
-    $files = \Drupal::entityTypeManager()
-      ->getStorage('file')
-      ->loadByProperties(['uri' => $list_image]);
-    $listImage = reset($files);
-
-    if (!$listImage) {
-      $listImage = File::create([
-        'uri' => $container->getListImage(),
-      ]);
-      $listImage->save();
+  private function prepareImage(string $url) {
+    $id = '';
+    $file = system_retrieve_file($url, NULL, TRUE, FILE_EXISTS_REPLACE);
+    if (!$file) {
+      return $id;
     }
 
-    return $listImage->id();
+    $img = \Drupal::service('file_system')->realpath($file->getFileUri());
+    $type = mime_content_type($img);
+    $ext = FALSE;
+    if ($type) {
+      $extensions = explode('/', $type);
+      $ext = $extensions[1];
+    }
+    if (!empty($ext)) {
+      $uri = "{$file->getFileUri()}.{$ext}";
+      $image = file_copy($file, $uri, FILE_EXISTS_REPLACE);
+
+      $id = $image->id();
+    }
+
+    return $id;
   }
 
   /**

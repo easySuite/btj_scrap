@@ -68,7 +68,9 @@ class ScrapEventsQueueBase extends QueueWorkerBase implements
       'type' => 'ding_event',
       'title' => $container->getTitle(),
       'field_ding_event_list_image' => [
-        'target_id' => $this->prepareEventListImage($container),
+        'target_id' => $this->prepareImage($container->getListImage()),
+        'alt' => $container->getTitle(),
+        'title' => $container->getTitle(),
       ],
       'field_ding_event_lead' => $container->getLead(),
       'field_ding_event_body' => [
@@ -144,21 +146,21 @@ class ScrapEventsQueueBase extends QueueWorkerBase implements
   /**
    * Get list image id to be saved on node creation.
    */
-  private function prepareEventListImage(EventContainerInterface $container) {
-    // Create list image object from remote URL.
-    $files = \Drupal::entityTypeManager()
-      ->getStorage('file')
-      ->loadByProperties(['uri' => $container->getListImage()]);
-    $listImage = reset($files);
-
-    if (!$listImage) {
-      $listImage = File::create([
-        'uri' => $container->getListImage(),
-      ]);
-      $listImage->save();
+  private function prepareImage(string $url) {
+    $file = system_retrieve_file($url, NULL, TRUE, FILE_EXISTS_REPLACE);
+    $img = \Drupal::service('file_system')->realpath($file->getFileUri());
+    $type = mime_content_type($img);
+    $ext = FALSE;
+    if ($type) {
+      $extensions = explode('/', $type);
+      $ext = $extensions[1];
+    }
+    if ($ext) {
+      $uri = "{$file->getFileUri()}.{$ext}";
+      $image = file_copy($file, $uri, FILE_EXISTS_REPLACE);
     }
 
-    return $listImage->id();
+    return $image->id();
   }
 
   /**

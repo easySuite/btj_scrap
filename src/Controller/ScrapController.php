@@ -16,13 +16,12 @@ use BTJ\Scrapper\Container\EventContainer;
 use BTJ\Scrapper\Container\NewsContainer;
 use BTJ\Scrapper\Container\LibraryContainer;
 
-define("BTJ_SCRAP_BATCH_SIZE", 1);
-
 /**
  * Implement scrap controller.
  */
 class ScrapController extends ControllerBase {
 
+  private const BTJ_SCRAP_BATCH_SIZE = 1;
   /**
    * Scrap single library based on the hardcoded link.
    */
@@ -33,8 +32,10 @@ class ScrapController extends ControllerBase {
     $scrapper = new CSLibraryService($transport);
     $scrapper->libraryScrap($url, $container);
 
+    $path = $container->getTitleImage();
+
     return [
-      '#markup' => $container->getBody(),
+      '#markup' => $path,
     ];
   }
 
@@ -149,9 +150,36 @@ class ScrapController extends ControllerBase {
   }
 
   /**
+   * Remove all nodes of the type before scrap.
+   */
+  private function clearContent(string $entity) {
+    $type = '';
+    switch ($entity) {
+      case 'libraries':
+        $type = 'ding_library';
+        break;
+
+      case 'events':
+        $type = 'ding_event';
+        break;
+
+      case 'news':
+        $type = 'ding_news';
+        break;
+    }
+
+    if ($type) {
+      $storage_handler = \Drupal::entityTypeManager()->getStorage("node");
+      $entities = $storage_handler->loadByProperties(["type" => $type]);
+      $storage_handler->delete($entities);
+    }
+  }
+
+  /**
    * Scrap queue processing.
    */
   public function scrap(GroupInterface $group, $entity) {
+    $this->clearContent($entity);
     $this->prepare($group, $entity);
 
     // Create batch which collects all the specified queue items and process.
@@ -167,7 +195,8 @@ class ScrapController extends ControllerBase {
     $queue = $queue_factory->get("btj_scrap_$entity");
 
     // Count number of the items in queue, and create enough batch operations.
-    for ($i = 0; $i < ceil($queue->numberOfItems() / BTJ_SCRAP_BATCH_SIZE); $i++) {
+    $items = ceil($queue->numberOfItems() / self::BTJ_SCRAP_BATCH_SIZE);
+    for ($i = 0; $i < $items; $i++) {
       // Create batch operations.
       $batch['operations'][] = array('Drupal\btj_scrapper\Controller\ScrapController::import', [$entity]);
     }
@@ -191,7 +220,7 @@ class ScrapController extends ControllerBase {
     $queue_worker = $queue_manager->createInstance("btj_scrap_$entity");
 
     // Get the number of items.
-    $number_of_queue = ($queue->numberOfItems() < BTJ_SCRAP_BATCH_SIZE) ? $queue->numberOfItems() : BTJ_SCRAP_BATCH_SIZE;
+    $number_of_queue = ($queue->numberOfItems() < self::BTJ_SCRAP_BATCH_SIZE) ? $queue->numberOfItems() : self::BTJ_SCRAP_BATCH_SIZE;
     for ($i = 0; $i < $number_of_queue; $i++) {
       // Get a queued item.
       if ($item = $queue->claimItem()) {
