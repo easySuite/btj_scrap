@@ -13,7 +13,7 @@
         "btj/worker": "dev-development"
     },
     "repositories": {
-        "worker": {
+        "btj-worker": {
             "type": "vcs",
             "url": "git@github.com:easySuite/BTJWorker.git"
         }
