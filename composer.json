@@ -9,6 +9,13 @@
         "drupal/geocoder": "^2.0@beta",
         "drupal/geofield_map": "^2.13",
         "drupal/group": "^1.0@RC",
-        "drupal/office_hours": "^1.1"
+        "drupal/office_hours": "^1.1",
+        "btj/worker": "dev-development"
+    },
+    "repositories": {
+        "worker": {
+            "type": "vcs",
+            "url": "git@github.com:easySuite/BTJWorker.git"
+        }
     }
 }
