@@ -3,7 +3,6 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.group.municipality.field_agency_id
     - field.field.group.municipality.field_scrap_events
     - field.field.group.municipality.field_scrap_libraries
     - field.field.group.municipality.field_scrap_news
@@ -18,14 +17,6 @@ targetEntityType: group
 bundle: municipality
 mode: default
 content:
-  field_agency_id:
-    weight: -4
-    label: above
-    settings:
-      link_to_entity: false
-    third_party_settings: {  }
-    type: string
-    region: content
   field_scrap_events:
     weight: 1
     label: hidden
