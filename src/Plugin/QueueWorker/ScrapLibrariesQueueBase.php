@@ -98,22 +98,34 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
 
   /**
    * Prepare image for to be added to field.
+   *
+   * TODO: This one repeats in every queue class.
    */
   private function prepareImage(string $url) {
-    $file = system_retrieve_file($url, NULL, TRUE, FILE_EXISTS_REPLACE);
-    $img = \Drupal::service('file_system')->realpath($file->getFileUri());
-    $type = mime_content_type($img);
-    $ext = FALSE;
-    if ($type) {
-      $extensions = explode('/', $type);
-      $ext = $extensions[1];
-    }
-    if ($ext) {
-      $uri = "{$file->getFileUri()}.{$ext}";
-      $image = file_copy($file, $uri, FILE_EXISTS_REPLACE);
+    /** @var \Drupal\file\FileInterface $file */
+    $file = system_retrieve_file($url, NULL, FALSE, FILE_EXISTS_REPLACE);
+    if (!$file) {
+      return NULL;
     }
 
-    return $image->id();
+    $image_info = getimagesize($file);
+    // This a'int an image.
+    if (!$image_info) {
+      return NULL;
+    }
+
+    $extension = explode('/', $image_info['mime'])[1];
+
+    $fileEntity = File::create();
+    $fileEntity->setFileUri($file);
+    $fileEntity->setMimeType($image_info['mime']);
+    $fileEntity->setFilename(basename($file));
+
+    /** @var \Drupal\file\FileInterface $managedFile */
+    $managedFile = file_copy($fileEntity, $file . '.' . $extension, FILE_EXISTS_REPLACE);
+    file_unmanaged_delete($file);
+
+    return $managedFile ? $managedFile->id() : NULL;
   }
 
   /**
