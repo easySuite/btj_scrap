@@ -4,11 +4,11 @@ dependencies:
   config:
     - field.storage.node.field_municipality
     - group.type.municipality
-    - node.type.ding_library
-id: node.ding_library.field_municipality
+    - node.type.ding_event
+id: node.ding_event.field_municipality
 field_name: field_municipality
 entity_type: node
-bundle: ding_library
+bundle: ding_event
 label: Municipality
 description: ''
 required: true
