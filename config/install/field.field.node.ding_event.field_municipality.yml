@@ -1,0 +1,27 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_municipality
+    - group.type.municipality
+    - node.type.ding_event
+id: node.ding_event.field_municipality
+field_name: field_municipality
+entity_type: node
+bundle: ding_event
+label: Municipality
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:group'
+  handler_settings:
+    target_bundles:
+      municipality: municipality
+    sort:
+      field: _none
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference
