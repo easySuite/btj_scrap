@@ -34,3 +34,37 @@ function btj_scrapper_group_view_alter(array &$build,
     }
   }
 }
+
+/**
+ * Implements hook_form_alter().
+ */
+function btj_scrapper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  foreach (array_keys($form['actions']) as $action) {
+    if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
+      $form['actions'][$action]['#submit'][] = 'btj_node_add_form_submit';
+    }
+  }
+}
+
+/**
+ * Add municipality reference to node field on save.
+ */
+function btj_node_add_form_submit(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  $nid = $form_state->get('nid');
+  if (empty($nid)) {
+    return;
+  }
+
+  $account = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+  $municipality = $account->get('field_municipality_ref')
+    ->first()
+    ->get('entity')
+    ->getTargetIdentifier();
+
+  if (!$municipality) {
+    \Drupal::messenger()->addMessage(t('You don\'t have any municipality ownership assigned. Please contact site administrator.', MessengerInterface::TYPE_WARNING));
+  }
+  $node = \Drupal\node\Entity\Node::load($nid);
+  $node->set('field_municipality', $municipality);
+  $node->save();
+}
