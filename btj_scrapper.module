@@ -57,6 +57,9 @@ function btj_node_add_form_submit(array $form, \Drupal\Core\Form\FormStateInterf
     return;
   }
 
+  // TODO: This should be refactored towards a form_validate routine.
+  // So no value is forced unless the user explicitly sets one, or the default
+  // is used.
   $account = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
   $municipality = $account->get('field_municipality_ref')
     ->first()
@@ -68,5 +71,13 @@ function btj_node_add_form_submit(array $form, \Drupal\Core\Form\FormStateInterf
   }
   $node = \Drupal\node\Entity\Node::load($nid);
   $node->set('field_municipality', $municipality);
+
+  // TODO: This should be refactored to a form_alter routine.
+  // So the field is pre-populated with a municipality value.
+  // Currently, this invokes an unnecessary update request towards mobilesearch
+  // since mobilesearch module track entity update hooks to perform storage update.
+  // Looks like an action "made in the dark" - i.e. the node is manipulated
+  // during save, without any knowledge to the user. This invalidates the fact
+  // that a user can assign a different municipality manually.
   $node->save();
 }
