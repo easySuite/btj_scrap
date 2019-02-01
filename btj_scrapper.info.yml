@@ -1,5 +1,5 @@
 name: 'BTJ Scrapper'
-description: 'Integrate Goutte library to scrap content from Sweden library CMS.'
+description: 'Content web-scrapper from Sweden libraries CMS.'
 type: module
 package: BTJ
 core: 8.x
