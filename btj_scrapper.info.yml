@@ -12,5 +12,4 @@ dependencies:
   - drupal:geocoder_address
   - drupal:geocoder_field
   - drupal:group
-  - drupal:office_hours
   - drupal:feeds

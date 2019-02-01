@@ -90,10 +90,12 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
       ],
       'field_ding_library_mail' => $container->getEmail(),
       'field_ding_library_phone_number' => $container->getPhone(),
-      'field_ding_library_opening_hours' => $this->prepareHours($container->getOpeningHours()),
+//      'field_ding_library_opening_hours' => $this->prepareHours($container->getOpeningHours()),
     ]);
 
     $node->save();
+
+    // TODO: Assign opening hours.
   }
 
   /**
