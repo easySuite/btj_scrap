@@ -9,7 +9,6 @@ dependencies:
     - field.field.node.ding_library.field_ding_library_lead
     - field.field.node.ding_library.field_ding_library_links
     - field.field.node.ding_library.field_ding_library_mail
-    - field.field.node.ding_library.field_ding_library_opening_hours
     - field.field.node.ding_library.field_ding_library_phone_number
     - field.field.node.ding_library.field_ding_library_title_image
     - field.field.node.ding_library.field_municipality
@@ -21,7 +20,6 @@ dependencies:
     - geofield
     - image
     - link
-    - office_hours
     - path
     - text
 third_party_settings:
@@ -147,12 +145,6 @@ content:
       placeholder: ''
     third_party_settings: {  }
     type: email_default
-    region: content
-  field_ding_library_opening_hours:
-    weight: 6
-    settings: {  }
-    third_party_settings: {  }
-    type: office_hours_default
     region: content
   field_ding_library_phone_number:
     weight: 6
