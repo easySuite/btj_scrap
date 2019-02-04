@@ -2,8 +2,11 @@
 
 namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
+use Drupal\opening_hours\OpeningHours\Instance;
+use Drupal\opening_hours\Services\InstanceManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\node\Entity\Node;
 use Drupal\file\Entity\File;
@@ -22,15 +25,37 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
   protected $container = NULL;
 
   /**
-   * {@inheritdoc}
+   * Entity manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  public function __construct() {}
+  protected $entityTypeManager;
+
+  /**
+   * Opening hours instances manager.
+   *
+   * @var \Drupal\opening_hours\Services\InstanceManager
+   */
+  protected $ohoInstanceManager;
+
+  /**
+   * ScrapLibrariesQueueBase constructor.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   */
+  public function __construct(EntityTypeManagerInterface $entityTypeManager, InstanceManager $ohoInstanceManager) {
+    $this->entityTypeManager = $entityTypeManager;
+    $this->ohoInstanceManager = $ohoInstanceManager;
+  }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static();
+    return new static(
+      $container->get('entity_type.manager'),
+      $container->get('opening_hours.instance_manager')
+    );
   }
 
   /**
@@ -90,12 +115,28 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
       ],
       'field_ding_library_mail' => $container->getEmail(),
       'field_ding_library_phone_number' => $container->getPhone(),
-//      'field_ding_library_opening_hours' => $this->prepareHours($container->getOpeningHours()),
     ]);
 
+    // Save the node, we need it's id further.
     $node->save();
 
-    // TODO: Assign opening hours.
+    // Assing opening hours.
+    /** @var \Drupal\node\Entity\NodeType $libraryNodeType */
+    $libraryNodeType = $this->entityTypeManager
+      ->getStorage('node_type')
+      ->load('ding_library');
+    if ($libraryNodeType->getThirdPartySetting('opening_hours', 'oh_enabled', FALSE)) {
+      $openingHoursInstances = $this->prepareHours($container->getOpeningHours());
+
+      /** @var \Drupal\opening_hours\OpeningHours\Instance $openingHoursInstance */
+      foreach ($openingHoursInstances as $openingHoursInstance) {
+        $openingHoursInstance->setNid($node->id());
+        $this->ohoInstanceManager->save($openingHoursInstance);
+      }
+
+      // Trigger a node save, so mobilesearch can track changes.
+      $node->save();
+    }
   }
 
   /**
@@ -133,19 +174,45 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
   /**
    * Prepare opening hours array to be saved in field.
    */
-  private function prepareHours($hours) {
-    array_walk($hours, function (&$day, $key) {
-      list($start, $end) = explode('-', $day);
-      $start = implode('', explode(':', $start));
-      $end = implode('', explode(':', $end));
-      $day = ((int) $start) ? [
-        'day' => $key,
-        'starthours' => $start,
-        'endhours' => $end,
-      ] : [];
-    });
+  private function prepareHours(array $dayHours) {
+    $today = new \DateTime();
+    // Reset day of the week.
+    // This will make sure that date is set at the start of the week,
+    // regardless of current day.
+    $today->setISODate(
+      $today->format('o'),
+      $today->format('W'),
+      1
+    );
 
-    return $hours;
+    $instances = [];
+
+    foreach ($dayHours as $dayHour) {
+      list($start, $end) = explode('-', $dayHour);
+      list($startHour, $startMinute) = explode(':', $start);
+      list($endHour, $endMinute) = explode(':', $end);
+
+      $instanceDate = clone($today);
+
+      if (!empty((int) $start)) {
+        $instanceObject = new Instance();
+        $instanceObject->build([
+          'date' => $today,
+          'start_time' => (clone($instanceDate))->setTime($startHour, $startMinute),
+          'end_time' => (clone($instanceDate))->setTime($endHour, $endMinute),
+          'repeat_rule' => Instance::PROPAGATE_WEEKLY,
+          'repeat_end_date' => (clone($instanceDate))->modify('+6 months'),
+          'notice' => '',
+          'category_tid' => 0,
+          'customised' => 0,
+        ]);
+        $instances[] = $instanceObject;
+      }
+
+      $today->modify('next day');
+    }
+
+    return $instances;
   }
 
 }
