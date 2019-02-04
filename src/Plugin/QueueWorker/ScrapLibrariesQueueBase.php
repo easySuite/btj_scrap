@@ -202,8 +202,8 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
           'end_time' => (clone($instanceDate))->setTime($endHour, $endMinute),
           'repeat_rule' => Instance::PROPAGATE_WEEKLY,
           'repeat_end_date' => (clone($instanceDate))->modify('+6 months'),
-          'notice' => '',
-          'category_tid' => 0,
+          'notice' => null,
+          'category_tid' => null,
           'customised' => 0,
         ]);
         $instances[] = $instanceObject;
