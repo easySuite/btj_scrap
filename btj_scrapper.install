@@ -1,0 +1,75 @@
+<?php
+/**
+ * Implement install/uninstall hooks.
+ */
+
+use Drupal\Core\Database\Database;
+
+/**
+ * Implements hook_schema().
+ */
+function btj_scrapper_schema() {
+  $schema['btj_scrapper_nodes'] = [
+    'descrition' => 'Provide relation between drupal nodes and scrapped articles.',
+    'fields' => [
+      'bundle' => [
+        'description' => 'Entity type.',
+        'type' => 'varchar_ascii',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'entity_id' => [
+        'description' => 'Entity id of the scrapped articles.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'item_hash' => [
+        'description' => 'MD5 hash of the scrapped article.',
+        'type' => 'varchar_ascii',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ]
+    ],
+    'primary key' => ['entity_id', 'item_hash']
+  ];
+
+  return $schema;
+}
+
+function btj_scrapper_update_8001() {
+  $table_name = 'btj_scrapper_nodes';
+  $schema[$table_name] = [
+    'descrition' => 'Provide relation between drupal nodes and scrapped articles.',
+    'fields' => [
+      'bundle' => [
+        'description' => 'Entity type.',
+        'type' => 'varchar_ascii',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'entity_id' => [
+        'description' => 'Entity id of the scrapped articles.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'item_hash' => [
+        'description' => 'MD5 hash of the scrapped article.',
+        'type' => 'varchar_ascii',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ]
+    ],
+    'primary key' => ['entity_id', 'item_hash']
+  ];
+
+  $database = Database::getConnection()->schema();
+  $database->createTable($table_name, $schema[$table_name]);
+}
