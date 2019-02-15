@@ -4,11 +4,7 @@ namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 
 use BTJ\Scrapper\Container\EventContainer;
 use BTJ\Scrapper\Container\EventContainerInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Queue\QueueWorkerBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use \Drupal\node\Entity\Node;
-use \Drupal\file\Entity\File;
+use Drupal\node\Entity\Node;
 use \Drupal\taxonomy\Entity\Term;
 use BTJ\Scrapper\Transport\GouteHttpTransport;
 use BTJ\Scrapper\Service\CSLibraryService;
@@ -17,20 +13,7 @@ use BTJ\Scrapper\Service\AxiellLibraryService;
 /**
  * Provides base functionality for the Import Content From XML Queue Workers.
  */
-class ScrapEventsQueueBase extends QueueWorkerBase implements
-    ContainerFactoryPluginInterface {
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct() {}
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static();
-  }
+class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
 
   /**
    * {@inheritdoc}
@@ -57,44 +40,45 @@ class ScrapEventsQueueBase extends QueueWorkerBase implements
     $container = new EventContainer();
     $scrapper->eventScrap($url, $container);
 
-    // Create node from the array.
-    $this->createContent($container, $municipality);
+    $nid = $this->getNodebyHash($container->getHash());
+    if ($nid) {
+      $node = Node::load($nid);
+      $this->nodePrepare($container, $node);
+    }
+    else {
+      $node = Node::create(['type' => 'ding_event']);
+      $this->nodePrepare($container, $node);
+      $node->field_municipality->target_id = $municipality;
+    }
+    $node->save();
+
+    $this->setNodeRelations($node->id(), 'ding_event', $container->getHash());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function createContent(EventContainerInterface $container, int $municipality) {
-    $node = Node::create([
-      'type' => 'ding_event',
-      'title' => $container->getTitle(),
-      'field_ding_event_list_image' => [
-        'target_id' => $this->prepareImage($container->getListImage()),
-        'alt' => $container->getTitle(),
-        'title' => $container->getTitle(),
-      ],
-      'field_ding_event_lead' => $container->getLead(),
-      'field_municipality' => [
-        'target_id' => $municipality,
-      ],
-      'field_ding_event_body' => [
-        'value'  => $container->getBody(),
-        'format' => 'full_html',
-      ],
-      'field_ding_event_category' => [
-        'target_id' => $this->prepareEventCategory($container),
-      ],
-      'field_ding_event_tags' => $this->prepareEventTags($container),
-      'field_ding_event_price' => $container->getPrice(),
-      'field_ding_event_date' => $this->prepareEventDate($container),
+  function nodePrepare($container, &$node) {
+    $node->setTitle($container->getTitle());
 
-    ]);
+    $node->set('field_ding_event_lead', $container->getLead());
+
+    $node->field_ding_event_body->value = $container->getBody();
+    $node->field_ding_event_body->format = 'full_html';
+
+    $node->field_ding_event_list_image->target_id = $this->prepareImage($container->getListImage());
+    $node->field_ding_event_list_image->alt = $container->getTitle();
+    $node->field_ding_event_list_image->title = $container->getTitle();
+
+    $node->field_ding_event_category->target_id = $this->prepareEventCategory($container);
+    $node->set('field_ding_event_tags', $this->prepareEventTags($container));
+    $node->set('field_ding_event_price', $container->getPrice());
+    $node->set('field_ding_event_date', $this->prepareEventDate($container));
 
     $target = $this->prepareEventTarget($container);
     if (!empty($target)) {
       $node->set('field_ding_event_target', $target);
     }
-    $node->save();
   }
 
   /**
@@ -145,60 +129,6 @@ class ScrapEventsQueueBase extends QueueWorkerBase implements
     }
 
     return $termTags;
-  }
-
-  /**
-   * Get list image id to be saved on node creation.
-   *
-   * TODO: This one repeats in every queue class.
-   */
-  private function prepareImage(string $url) {
-    /** @var \Drupal\file\FileInterface $file */
-    $file = system_retrieve_file($url, NULL, FALSE, FILE_EXISTS_REPLACE);
-    if (!$file) {
-      return NULL;
-    }
-
-    $image_info = getimagesize($file);
-    // This a'int an image.
-    if (!$image_info) {
-      return NULL;
-    }
-
-    $extension = explode('/', $image_info['mime'])[1];
-
-    $fileEntity = File::create();
-    $fileEntity->setFileUri($file);
-    $fileEntity->setMimeType($image_info['mime']);
-    $fileEntity->setFilename(basename($file));
-
-    /** @var \Drupal\file\FileInterface $managedFile */
-    $managedFile = file_copy($fileEntity, $file . '.' . $extension, FILE_EXISTS_REPLACE);
-    file_unmanaged_delete($file);
-
-    return $managedFile ? $managedFile->id() : NULL;
-  }
-
-  /**
-   * Get title image id to be saved on node creation.
-   *
-   * TODO: Seems abandoned.
-   */
-  private function prepareEventTitleImage(EventContainerInterface $container) {
-    // Create title image object from remote URL.
-    $files = \Drupal::entityTypeManager()
-      ->getStorage('file')
-      ->loadByProperties(['uri' => $container->getTitleImage()]);
-    $titleImage = reset($files);
-
-    if (!$titleImage) {
-      $titleImage = File::create([
-        'uri' => $container->getTitleImage(),
-      ]);
-      $titleImage->save();
-    }
-
-    return $titleImage->id();
   }
 
   /**
