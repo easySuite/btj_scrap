@@ -60,6 +60,7 @@ class ScrapLibrariesQueueBase extends ScrapQueueWorkerBase {
     $url = $item->link;
     $type = $item->type;
     $municipality = $item->municipality;
+    $author = $item->uid;
 
     $transport = new GouteHttpTransport();
 
@@ -87,6 +88,7 @@ class ScrapLibrariesQueueBase extends ScrapQueueWorkerBase {
       $this->nodePrepare($container, $node);
       $node->field_municipality->target_id = $municipality;
     }
+    $node->setOwnerId($author);
     $node->save();
 
     // Assign opening hours.

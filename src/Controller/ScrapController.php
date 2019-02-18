@@ -84,6 +84,20 @@ class ScrapController extends ControllerBase {
   }
 
   /**
+   * Get related user of the given municipality.
+   */
+  private function getAuthorByMunicipality($gid) {
+    $connection = \Drupal::database();
+    $result =$connection->select('user__field_municipality_ref', 'um')
+      ->fields('um', ['entity_id'])
+      ->condition('um.field_municipality_ref_target_id', $gid)
+      ->execute()
+      ->fetchField();
+
+    return $result;
+  }
+
+  /**
    * Prepare scrap container for content fetch.
    */
   public function prepare(GroupInterface $group, $bundle) {
@@ -127,6 +141,7 @@ class ScrapController extends ControllerBase {
       $item->type = $type;
       $item->bundle = $bundle;
       $item->link = $url . $link;
+      $item->uid = $this->getAuthorByMunicipality($group->id());
 
       /** @var QueueInterface $queue */
       $queue = $queue_factory->get('btj_scrap_' . $bundle);
