@@ -9,6 +9,8 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 
+use \Drupal\group\Entity\GroupInterface;
+use \Drupal\btj_scrapper\Controller\ScrapController;
 /**
  * Implements hook_ENTITY_TYPE_view_alter().
  */
@@ -82,7 +84,6 @@ function btj_node_add_form_submit(array $form, \Drupal\Core\Form\FormStateInterf
   $node->save();
 }
 
-
 /**
  * Implements hook_entity_delete().
  */
@@ -92,4 +93,44 @@ function btj_scrapper_entity_delete(Drupal\Core\Entity\EntityInterface $entity) 
     ->condition('bundle', $entity->bundle())
     ->condition('entity_id', $entity->id())
     ->execute();
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_insert().
+ *
+ * Prepare queue on group creation.
+ */
+function btj_scrapper_group_insert(GroupInterface $group) {
+  $controller = new ScrapController();
+  $bundles = ['library', 'news', 'event'];
+  foreach ($bundles as $bundle) {
+    $controller->prepare($group, $bundle);
+  }
+}
+
+/**
+ * Implements hook_cron().
+ */
+function btj_scrapper_cron() {
+  // Ensure that check sites once in a weeek.
+  $interval = 7 * 24 * 60 * 60;
+
+  $execution = \Drupal::state()->get('btj_scrapper.execution', 0);
+  $request_time = \Drupal::time()->getRequestTime();
+
+  if ($request_time - $execution > $interval) {
+    \Drupal::logger('btj_scrapper')
+      ->notice('BTJ scrap content from Swedish municipalities');
+
+    $groups = \Drupal::entityTypeManager()->getStorage('group')->loadByProperties(['type' => 'municipality']);
+    $controller = new ScrapController();
+    $bundles = ['library', 'news', 'event'];
+    foreach ($groups as $group) {
+      foreach ($bundles as $bundle) {
+        $controller->prepare($group, $bundle);
+      }
+    }
+
+    \Drupal::state()->set('btj_scrapper.execution', $request_time);
+  }
 }

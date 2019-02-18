@@ -32,7 +32,14 @@ function btj_scrapper_schema() {
         'length' => 32,
         'not null' => TRUE,
         'default' => '',
-      ]
+      ],
+      'item_url' => [
+        'description' => 'URL of the item on the target site.',
+        'type' => 'varchar_ascii',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
     ],
     'primary key' => ['entity_id', 'item_hash']
   ];
@@ -65,7 +72,14 @@ function btj_scrapper_update_8001() {
         'length' => 32,
         'not null' => TRUE,
         'default' => '',
-      ]
+      ],
+      'item_url' => [
+        'description' => 'URL of the item on the target site.',
+        'type' => 'varchar_ascii',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ],
     ],
     'primary key' => ['entity_id', 'item_hash']
   ];
