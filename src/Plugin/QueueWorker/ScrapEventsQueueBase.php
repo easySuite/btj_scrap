@@ -19,10 +19,10 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
    */
   public function processItem($item) {
     // Get the content array.
-    $url = $item->data['link'];
-    $type = $item->data['type'];
-    $municipality = $item->data['municipality'];
-    $author = $item->data['uid'];
+    $url = $item->link;
+    $type = $item->type;
+    $municipality = $item->municipality;
+    $author = $item->uid;
 
     $transport = new GouteHttpTransport();
 
@@ -53,7 +53,7 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
     $node->setOwnerId($author);
     $node->save();
 
-    $this->setNodeRelations($node->id(), 'ding_event', $container->getHash());
+    $this->setNodeRelations($node->id(), 'ding_event', $container->getHash(), $url);
   }
 
   /**

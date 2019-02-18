@@ -153,13 +153,14 @@ abstract class ScrapQueueWorkerBase extends QueueWorkerBase implements
   /**
    * Save relations between drupal node and scrapped item.
    */
-  public function setNodeRelations($nid, $bundle, $hash) {
+  public function setNodeRelations($nid, $bundle, $hash, $url) {
     $connection = \Drupal::database();
     $connection->merge('btj_scrapper_nodes')
       ->keys(['item_hash' => $hash])
       ->fields([
         'entity_id' => $nid,
         'bundle' => $bundle,
+        'item_url' => $url,
       ])
       ->execute();
   }
