@@ -60,7 +60,7 @@ class ScrapController extends ControllerBase {
    * Scrap single event based on the hardcoded link.
    */
   public function event() {
-    $url = 'https://bibliotek.boras.se/sv/event/kapten-kryp-skattkistan/0e943ce7-948f-4d59-b483-6b77e9e57af4';
+    $url = 'https://bibliotek.boras.se/sv/event/l%C3%A4xhj%C3%A4lp-1/64fc0b17-0007-4ba2-bcba-c5887c9cb09f';
 
     $container = new EventContainer();
     $transport = new GouteHttpTransport();
@@ -68,11 +68,9 @@ class ScrapController extends ControllerBase {
     $scrapper->eventScrap($url, $container);
 
     $worker = new ScrapEventsQueueBase();
-//    $nid = $worker->getNodebyHash($container->getHash());
-    $nid = 256;
-    $worker->updateContent($container, $nid);
+    $date = $worker->prepareEventDate($container);
     return [
-      '#markup' => $nid,
+      '#markup' => $date,
     ];
   }
 
@@ -172,7 +170,6 @@ class ScrapController extends ControllerBase {
    * Scrap queue processing.
    */
   public function scrap(GroupInterface $group, $entity) {
-    $this->clearContent($entity);
     $this->prepare($group, $entity);
 
     // Create batch which collects all the specified queue items and process.

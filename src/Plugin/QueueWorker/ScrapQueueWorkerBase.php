@@ -6,6 +6,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use \Drupal\file\Entity\File;
+use Drupal\taxonomy\Entity\Term;
 
 abstract class ScrapQueueWorkerBase extends QueueWorkerBase implements
   ContainerFactoryPluginInterface {
@@ -28,9 +29,88 @@ abstract class ScrapQueueWorkerBase extends QueueWorkerBase implements
   abstract protected function nodePrepare($container, &$node);
 
   /**
+   * Get bundle category term.
+   */
+  protected function prepareCategory($category, $bundle) {
+    $query = \Drupal::entityQuery('taxonomy_term');
+    $query->condition('vid', $bundle . "_category");
+    $query->condition('name', $category);
+    $tids = $query->execute();
+    if (empty($tids)) {
+      $term = Term::create([
+        'vid' => $bundle . '_category',
+        'name' => $category,
+      ])->save();
+    }
+    else {
+      $term = reset($tids);
+    }
+
+    return $term;
+  }
+
+  /**
+   * Get tags ids in taxonomy.
+   */
+  protected function prepareTags($tags) {
+    $termTags = [];
+
+    foreach ($tags as $tag) {
+      $query = \Drupal::entityQuery('taxonomy_term');
+      $query->condition('vid', "tags");
+      $query->condition('name', $tag);
+      $tids = $query->execute();
+
+      if (empty($tids)) {
+        $termTag = Term::create([
+          'vid' => 'tags',
+          'name' => $tag,
+        ]);
+
+        $termTag->save();
+        $termTags[] = $termTag->id();
+      }
+      else {
+        $termTags[] = reset($tids);
+      }
+    }
+
+    return $termTags;
+  }
+
+  /**
+   * Prepare target taxonomy term.
+   */
+  protected function prepareTarget($terms, $bundle) {
+    $termTags = [];
+
+    foreach ($terms as $term) {
+      $query = \Drupal::entityQuery('taxonomy_term');
+      $query->condition('vid', $bundle . "_target");
+      $query->condition('name', $term);
+      $tids = $query->execute();
+
+      if (empty($tids)) {
+        $termTag = Term::create([
+          'vid' => $bundle . '_target',
+          'name' => $term,
+        ]);
+
+        $termTag->save();
+        $termTags[] = $termTag->id();
+      }
+      else {
+        $termTags[] = reset($tids);
+      }
+    }
+
+    return $termTags;
+  }
+
+  /**
    * Get list image id to be saved on node creation.
    */
-  public function prepareImage(string $url) {
+  protected function prepareImage(string $url) {
     /** @var \Drupal\file\FileInterface $file */
     $file = system_retrieve_file($url, NULL, FALSE, FILE_EXISTS_REPLACE);
     if (!$file) {

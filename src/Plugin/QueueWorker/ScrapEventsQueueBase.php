@@ -5,7 +5,6 @@ namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 use BTJ\Scrapper\Container\EventContainer;
 use BTJ\Scrapper\Container\EventContainerInterface;
 use Drupal\node\Entity\Node;
-use \Drupal\taxonomy\Entity\Term;
 use BTJ\Scrapper\Transport\GouteHttpTransport;
 use BTJ\Scrapper\Service\CSLibraryService;
 use BTJ\Scrapper\Service\AxiellLibraryService;
@@ -69,72 +68,35 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
     $node->field_ding_event_list_image->target_id = $this->prepareImage($container->getListImage());
     $node->field_ding_event_list_image->alt = $container->getTitle();
     $node->field_ding_event_list_image->title = $container->getTitle();
-
-    $node->field_ding_event_category->target_id = $this->prepareEventCategory($container);
-    $node->set('field_ding_event_tags', $this->prepareEventTags($container));
     $node->set('field_ding_event_price', $container->getPrice());
     $node->set('field_ding_event_date', $this->prepareEventDate($container));
 
-    $target = $this->prepareEventTarget($container);
-    if (!empty($target)) {
-      $node->set('field_ding_event_target', $target);
-    }
-  }
-
-  /**
-   * Get event category term.
-   */
-  private function prepareEventCategory(EventContainerInterface $container) {
-    $query = \Drupal::entityQuery('taxonomy_term');
-    $query->condition('vid', "event_category");
-    $query->condition('name', $container->getCategory());
-    $tids = $query->execute();
-    if (empty($tids)) {
-      $category = Term::create([
-        'vid' => 'event_category',
-        'name' => $container->getCategory(),
-      ])->save();
-    }
-    else {
-      $category = reset($tids);
+    $category = $container->getCategory();
+    if (!empty($category)) {
+      $node->field_ding_event_category->target_id = $this->prepareCategory($category, 'event');
     }
 
-    return $category;
-  }
-
-  /**
-   * Get tags ids to be saved on node creation.
-   */
-  private function prepareEventTags(EventContainerInterface $container) {
     $tags = $container->getTags();
-
-    foreach ($tags as $tag) {
-      $query = \Drupal::entityQuery('taxonomy_term');
-      $query->condition('vid', "tags");
-      $query->condition('name', $tag);
-      $tids = $query->execute();
-
-      if (empty($tids)) {
-        $termTag = Term::create([
-          'vid' => 'tags',
-          'name' => $tag,
-        ]);
-
-        $termTag->save();
-        $termTags[] = $termTag->id();
-      }
-      else {
-        $termTags[] = reset($tids);
-      }
+    $tags = array_filter($tags);
+    if (!empty($tags)) {
+      $node->set('field_ding_event_tags', $this->prepareTags($tags));
     }
 
-    return $termTags;
+    $terms = $container->getTarget();
+    $terms = array_filter($terms);
+    if (!empty($terms)) {
+      $target = $this->prepareTarget($terms, 'event');
+
+      if (!empty($target)) {
+        $node->set('field_ding_event_target', $target);
+      }
+    }
   }
 
   /**
    * Prepare dave field to be saved on node creation.
    */
-  private function prepareEventDate(EventContainerInterface $container) {
+  public function prepareEventDate(EventContainerInterface $container) {
     $mapping = [
       'januari' => '01',
       'februari' => '02',
@@ -165,36 +127,6 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
     $end = "{$year}-{$month}-{$date}T{$hours[1]}:00";
 
     return ['value' => $start, 'end_value' => $end];
-  }
-
-  /**
-   * Prepare target taxonomy term.
-   */
-  private function prepareEventTarget(EventContainerInterface $container) {
-    $terms = $container->getTarget();
-    $termTags = [];
-
-    foreach ($terms as $term) {
-      $query = \Drupal::entityQuery('taxonomy_term');
-      $query->condition('vid', "event_target");
-      $query->condition('name', $term);
-      $tids = $query->execute();
-
-      if (empty($tids)) {
-        $termTag = Term::create([
-          'vid' => 'event_target',
-          'name' => $term,
-        ]);
-
-        $termTag->save();
-        $termTags[] = $termTag->id();
-      }
-      else {
-        $termTags[] = reset($tids);
-      }
-    }
-
-    return $termTags;
   }
 
 }

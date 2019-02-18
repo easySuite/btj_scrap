@@ -3,24 +3,19 @@
 namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\opening_hours\OpeningHours\Instance;
 use Drupal\opening_hours\Services\InstanceManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\node\Entity\Node;
-use Drupal\file\Entity\File;
 use BTJ\Scrapper\Transport\GouteHttpTransport;
 use BTJ\Scrapper\Service\CSLibraryService;
 use BTJ\Scrapper\Service\AxiellLibraryService;
-use BTJ\Scrapper\Container\LibraryContainerInterface;
 use BTJ\Scrapper\Container\LibraryContainer;
 
 /**
  * Provides base functionality for the Import Content From XML Queue Workers.
  */
-class ScrapLibrariesQueueBase extends QueueWorkerBase implements
-    ContainerFactoryPluginInterface {
+class ScrapLibrariesQueueBase extends ScrapQueueWorkerBase {
 
   protected $container = NULL;
 
@@ -83,44 +78,19 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
     $container = new LibraryContainer();
     $scrapper->libraryScrap($url, $container);
 
-    // Create node from the array.
-    $this->createContent($container, $municipality);
-  }
-
-  /**
-   * Create library node.
-   */
-  protected function createContent(LibraryContainerInterface $container, int $municipality) {
-    // Create node object from the $content array.
-    $node = Node::create([
-      'type'  => 'ding_library',
-      'title' => $container->getTitle(),
-      'field_municipality' => [
-        'target_id' => $municipality,
-      ],
-      'field_ding_library_title_image' => [
-        'target_id' => $this->prepareImage($container->getTitleImage()),
-        'alt' => $container->getTitle(),
-        'title' => $container->getTitle(),
-      ],
-      'field_ding_library_body'  => [
-        'value' => $container->getBody(),
-        'format' => 'full_html',
-      ],
-      'field_ding_library_addresse' => [
-        'country_code' => 'SE',
-        'locality' => $container->getCity(),
-        'address_line1' => $container->getStreet(),
-        'postal_code' => $container->getZip(),
-      ],
-      'field_ding_library_mail' => $container->getEmail(),
-      'field_ding_library_phone_number' => $container->getPhone(),
-    ]);
-
-    // Save the node, we need it's id further.
+    $nid = $this->getNodebyHash($container->getHash());
+    if ($nid) {
+      $node = Node::load($nid);
+      $this->nodePrepare($container, $node);
+    }
+    else {
+      $node = Node::create(['type' => 'ding_library']);
+      $this->nodePrepare($container, $node);
+      $node->field_municipality->target_id = $municipality;
+    }
     $node->save();
 
-    // Assing opening hours.
+    // Assign opening hours.
     /** @var \Drupal\node\Entity\NodeType $libraryNodeType */
     $libraryNodeType = $this->entityTypeManager
       ->getStorage('node_type')
@@ -137,38 +107,27 @@ class ScrapLibrariesQueueBase extends QueueWorkerBase implements
       // Trigger a node save, so mobilesearch can track changes.
       $node->save();
     }
+
+    $this->setNodeRelations($node->id(), 'ding_library', $container->getHash());
   }
 
-  /**
-   * Prepare image for to be added to field.
-   *
-   * TODO: This one repeats in every queue class.
-   */
-  private function prepareImage(string $url) {
-    /** @var \Drupal\file\FileInterface $file */
-    $file = system_retrieve_file($url, NULL, FALSE, FILE_EXISTS_REPLACE);
-    if (!$file) {
-      return NULL;
-    }
+  function nodePrepare($container, &$node) {
+    $node->setTitle($container->getTitle());
 
-    $image_info = getimagesize($file);
-    // This a'int an image.
-    if (!$image_info) {
-      return NULL;
-    }
 
-    $extension = explode('/', $image_info['mime'])[1];
+    $node->field_ding_library_body->value = $container->getBody();
+    $node->field_ding_library_body->format = 'full_html';
 
-    $fileEntity = File::create();
-    $fileEntity->setFileUri($file);
-    $fileEntity->setMimeType($image_info['mime']);
-    $fileEntity->setFilename(basename($file));
+    $node->field_ding_library_title_image->target_id = $this->prepareImage($container->getTitleImage());
+    $node->field_ding_library_title_image->alt = $container->getTitle();
+    $node->field_ding_library_title_image->title = $container->getTitle();
 
-    /** @var \Drupal\file\FileInterface $managedFile */
-    $managedFile = file_copy($fileEntity, $file . '.' . $extension, FILE_EXISTS_REPLACE);
-    file_unmanaged_delete($file);
-
-    return $managedFile ? $managedFile->id() : NULL;
+    $node->field_ding_library_addresse->country_code = 'SE';
+    $node->field_ding_library_addresse->locality = $container->getCity();
+    $node->field_ding_library_addresse->address_line1 = $container->getStreet();
+    $node->field_ding_library_addresse->postal_code = $container->getZip();
+    $node->set('field_ding_library_mail', $container->getEmail());
+    $node->set('field_ding_library_phone_number', $container->getPhone());
   }
 
   /**

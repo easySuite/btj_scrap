@@ -81,3 +81,15 @@ function btj_node_add_form_submit(array $form, \Drupal\Core\Form\FormStateInterf
   // that a user can assign a different municipality manually.
   $node->save();
 }
+
+
+/**
+ * Implements hook_entity_delete().
+ */
+function btj_scrapper_entity_delete(Drupal\Core\Entity\EntityInterface $entity) {
+  \Drupal::database()
+    ->delete('btj_scrapper_nodes')
+    ->condition('bundle', $entity->bundle())
+    ->condition('entity_id', $entity->id())
+    ->execute();
+}
