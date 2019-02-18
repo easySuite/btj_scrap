@@ -17,13 +17,13 @@ function btj_scrapper_group_view_alter(array &$build,
   EntityViewDisplayInterface $display) {
   if (!empty($build['field_scrap_libraries'])) {
     foreach (Element::children($build['field_scrap_libraries']) as $key) {
-      $url = Url::fromUserInput("/scrap/" . $entity->id() . '/libraries');
+      $url = Url::fromUserInput("/scrap/" . $entity->id() . '/library');
       $build['field_scrap_libraries'][$key]['#url'] = $url;
     }
   }
   if (!empty($build['field_scrap_events'])) {
     foreach (Element::children($build['field_scrap_events']) as $key) {
-      $url = Url::fromUserInput("/scrap/" . $entity->id() . '/events');
+      $url = Url::fromUserInput("/scrap/" . $entity->id() . '/event');
       $build['field_scrap_events'][$key]['#url'] = $url;
     }
   }
@@ -80,4 +80,16 @@ function btj_node_add_form_submit(array $form, \Drupal\Core\Form\FormStateInterf
   // during save, without any knowledge to the user. This invalidates the fact
   // that a user can assign a different municipality manually.
   $node->save();
+}
+
+
+/**
+ * Implements hook_entity_delete().
+ */
+function btj_scrapper_entity_delete(Drupal\Core\Entity\EntityInterface $entity) {
+  \Drupal::database()
+    ->delete('btj_scrapper_nodes')
+    ->condition('bundle', $entity->bundle())
+    ->condition('entity_id', $entity->id())
+    ->execute();
 }

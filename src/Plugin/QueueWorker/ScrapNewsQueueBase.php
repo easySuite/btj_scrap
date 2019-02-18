@@ -4,12 +4,7 @@ namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 
 use BTJ\Scrapper\Container\NewsContainer;
 use BTJ\Scrapper\Container\NewsContainerInterface;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Queue\QueueWorkerBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use \Drupal\node\Entity\Node;
-use \Drupal\file\Entity\File;
-use \Drupal\taxonomy\Entity\Term;
+use Drupal\node\Entity\Node;
 use BTJ\Scrapper\Transport\GouteHttpTransport;
 use BTJ\Scrapper\Service\CSLibraryService;
 use BTJ\Scrapper\Service\AxiellLibraryService;
@@ -17,23 +12,11 @@ use BTJ\Scrapper\Service\AxiellLibraryService;
 /**
  * Provides base functionality for the Import Content From XML Queue Workers.
  */
-class ScrapNewsQueueBase extends QueueWorkerBase implements
-    ContainerFactoryPluginInterface {
+class ScrapNewsQueueBase extends ScrapQueueWorkerBase {
 
   /**
    * {@inheritdoc}
-   */
-  public function __construct() {}
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static();
-  }
-
-  /**
-   * {@inheritdoc}
+   * 
    */
   public function processItem($item) {
     // Get the content array.
@@ -57,168 +40,56 @@ class ScrapNewsQueueBase extends QueueWorkerBase implements
     $container = new NewsContainer();
     $scrapper->newsScrap($url, $container);
 
-    // Create node from the array.
-    $this->createContent($container, $municipality);
-  }
-
-  /**
-   * Create news node based on container object.
-   */
-  protected function createContent(NewsContainerInterface $container, int $municipality) {
-    // Create node object from the $content array.
-    $node = Node::create([
-      'type'  => 'ding_news',
-      'title' => $container->getTitle(),
-      'field_ding_news_body'  => [
-        'value'  => $container->getBody(),
-        'format' => 'full_html',
-      ],
-      'field_ding_news_lead' => [
-        'value' => $container->getLead(),
-      ],
-      'field_municipality' => [
-        'target_id' => $municipality,
-      ],
-      'field_ding_news_list_image' => [
-        'target_id' => $this->prepareImage($container->getListImage()),
-        'alt' => $container->getTitle(),
-        'title' => $container->getTitle(),
-      ],
-    ]);
-
-    $category = $this->prepareNewsCategory($container);
-    if (!empty($category)) {
-      $node->set('field_ding_news_category', $category);
-    }
-
-    $tags = $this->prepareNewsTags($container);
-    if (!empty($tags)) {
-      $node->set('field_ding_news_tags', $tags);
-    }
-
-    $target = $this->prepareNewsTarget($container);
-    if (!empty($target)) {
-      $node->set('field_ding_news_target', $target);
-    }
-
-    $node->save();
-  }
-
-  /**
-   * Get image id from the container object.
-   *
-   * TODO: This one repeats in every queue class.
-   */
-  private function prepareImage(string $url) {
-    /** @var \Drupal\file\FileInterface $file */
-    $file = system_retrieve_file($url, NULL, FALSE, FILE_EXISTS_REPLACE);
-    if (!$file) {
-      return NULL;
-    }
-
-    $image_info = getimagesize($file);
-    // This a'int an image.
-    if (!$image_info) {
-      return NULL;
-    }
-
-    $extension = explode('/', $image_info['mime'])[1];
-
-    $fileEntity = File::create();
-    $fileEntity->setFileUri($file);
-    $fileEntity->setMimeType($image_info['mime']);
-    $fileEntity->setFilename(basename($file));
-
-    /** @var \Drupal\file\FileInterface $managedFile */
-    $managedFile = file_copy($fileEntity, $file . '.' . $extension, FILE_EXISTS_REPLACE);
-    file_unmanaged_delete($file);
-
-    return $managedFile ? $managedFile->id() : NULL;
-  }
-
-  /**
-   * Prepare news category taxonomy terms.
-   */
-  private function prepareNewsCategory(NewsContainerInterface $container) {
-    $category = $container->getCategory();
-    if (empty($category)) {
-      return '';
-    }
-    $query = \Drupal::entityQuery('taxonomy_term');
-    $query->condition('vid', "news_category");
-    $query->condition('name', $container->getCategory());
-    $tids = $query->execute();
-    if (empty($tids)) {
-      $category = Term::create([
-        'vid' => 'news_category',
-        'name' => $container->getCategory(),
-      ])->save();
+    $nid = $this->getNodebyHash($container->getHash());
+    if ($nid) {
+      $node = Node::load($nid);
+      $this->nodePrepare($container, $node);
     }
     else {
-      $category = reset($tids);
+      $node = Node::create(['type' => 'ding_news']);
+      $this->nodePrepare($container, $node);
+      $node->field_municipality->target_id = $municipality;
     }
+    $node->save();
 
-    return $category;
+    $this->setNodeRelations($node->id(), 'ding_news', $container->getHash());
   }
 
   /**
-   * Get tags ids in taxonomy.
+   * {@inheritdoc}
    */
-  private function prepareNewsTags(NewsContainerInterface $container) {
+  function nodePrepare($container, &$node) {
+    $node->setTitle($container->getTitle());
+
+    $node->set('field_ding_news_lead', $container->getLead());
+
+    $node->field_ding_news_body->value = $container->getBody();
+    $node->field_ding_news_body->format = 'full_html';
+
+    $node->field_ding_news_list_image->target_id = $this->prepareImage($container->getListImage());
+    $node->field_ding_news_list_image->alt = $container->getTitle();
+    $node->field_ding_news_list_image->title = $container->getTitle();
+
+    $category = $container->getCategory();
+    if (!empty($category)) {
+      $node->field_ding_news_category->target_id = $this->prepareCategory($category, 'news');
+    }
+
     $tags = $container->getTags();
-    $termTags = [];
-
-    foreach ($tags as $tag) {
-      $query = \Drupal::entityQuery('taxonomy_term');
-      $query->condition('vid', "tags");
-      $query->condition('name', $tag);
-      $tids = $query->execute();
-
-      if (empty($tids)) {
-        $termTag = Term::create([
-          'vid' => 'tags',
-          'name' => $tag,
-        ]);
-
-        $termTag->save();
-        $termTags[] = $termTag->id();
-      }
-      else {
-        $termTags[] = reset($tids);
-      }
+    $tags = array_filter($tags);
+    if (!empty($tags)) {
+      $node->set('field_ding_news_tags', $this->prepareTags($tags));
     }
 
-    return $termTags;
-  }
-
-  /**
-   * Prepare target taxonomy term.
-   */
-  private function prepareNewsTarget(NewsContainerInterface $container) {
     $terms = $container->getTarget();
-    $termTags = [];
+    $terms = array_filter($terms);
+    if (!empty($terms)) {
+      $target = $this->prepareTarget($terms, 'news');
 
-    foreach ($terms as $term) {
-      $query = \Drupal::entityQuery('taxonomy_term');
-      $query->condition('vid', "news_target");
-      $query->condition('name', $term);
-      $tids = $query->execute();
-
-      if (empty($tids)) {
-        $termTag = Term::create([
-          'vid' => 'news_target',
-          'name' => $term,
-        ]);
-
-        $termTag->save();
-        $termTags[] = $termTag->id();
-      }
-      else {
-        $termTags[] = reset($tids);
+      if (!empty($target)) {
+        $node->set('field_ding_news_target', $target);
       }
     }
-
-    return $termTags;
   }
 
 }

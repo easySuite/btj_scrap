@@ -16,6 +16,8 @@ use BTJ\Scrapper\Container\EventContainer;
 use BTJ\Scrapper\Container\NewsContainer;
 use BTJ\Scrapper\Container\LibraryContainer;
 
+
+use Drupal\btj_scrapper\Plugin\QueueWorker\ScrapEventsQueueBase;
 /**
  * Implement scrap controller.
  */
@@ -32,7 +34,7 @@ class ScrapController extends ControllerBase {
     $scrapper = new CSLibraryService($transport);
     $scrapper->libraryScrap($url, $container);
 
-    $path = $container->getTitleImage();
+    $path = $container->getHash();
 
     return [
       '#markup' => $path,
@@ -50,7 +52,7 @@ class ScrapController extends ControllerBase {
     $scrapper->newsScrap($url, $container);
 
     return [
-      '#markup' => $container->getTitle(),
+      '#markup' => $container->getHash(),
     ];
   }
 
@@ -58,15 +60,17 @@ class ScrapController extends ControllerBase {
    * Scrap single event based on the hardcoded link.
    */
   public function event() {
-    $url = 'https://bibliotek.boras.se/sv/event/teknikcaf%C3%A9/ed551375-2e4f-4384-a2be-48248d6758ea';
+    $url = 'https://bibliotek.boras.se/sv/event/l%C3%A4xhj%C3%A4lp-1/64fc0b17-0007-4ba2-bcba-c5887c9cb09f';
 
     $container = new EventContainer();
     $transport = new GouteHttpTransport();
     $scrapper = new CSLibraryService($transport);
     $scrapper->eventScrap($url, $container);
 
+    $worker = new ScrapEventsQueueBase();
+    $date = $worker->prepareEventDate($container);
     return [
-      '#markup' => $container->getBody(),
+      '#markup' => $date,
     ];
   }
 
@@ -116,11 +120,11 @@ class ScrapController extends ControllerBase {
 
     $container = NULL;
     switch ($entity) {
-      case 'libraries':
+      case 'library':
         $container = new LibraryContainer();
         break;
 
-      case 'events':
+      case 'event':
         $container = new EventContainer();
         break;
 
@@ -153,20 +157,7 @@ class ScrapController extends ControllerBase {
    * Remove all nodes of the type before scrap.
    */
   private function clearContent(string $entity) {
-    $type = '';
-    switch ($entity) {
-      case 'libraries':
-        $type = 'ding_library';
-        break;
-
-      case 'events':
-        $type = 'ding_event';
-        break;
-
-      case 'news':
-        $type = 'ding_news';
-        break;
-    }
+    $type = "ding_$entity";
 
     if ($type) {
       $storage_handler = \Drupal::entityTypeManager()->getStorage("node");
@@ -179,7 +170,6 @@ class ScrapController extends ControllerBase {
    * Scrap queue processing.
    */
   public function scrap(GroupInterface $group, $entity) {
-    $this->clearContent($entity);
     $this->prepare($group, $entity);
 
     // Create batch which collects all the specified queue items and process.
