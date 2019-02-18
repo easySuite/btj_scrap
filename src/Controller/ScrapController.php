@@ -147,6 +147,7 @@ class ScrapController extends ControllerBase {
         'link' => $url . $link,
         'type' => $type,
         'municipality' => $group->id(),
+        'uid' => $this->getAuthorByMunicipality($group->id()),
       ];
 
       $queue->createItem($item);
@@ -154,16 +155,17 @@ class ScrapController extends ControllerBase {
   }
 
   /**
-   * Remove all nodes of the type before scrap.
+   * Get related user of the given municipality.
    */
-  private function clearContent(string $entity) {
-    $type = "ding_$entity";
+  private function getAuthorByMunicipality($gid) {
+    $connection = \Drupal::database();
+    $result =$connection->select('user__field_municipality_ref', 'um')
+    ->fields('um', ['entity_id'])
+    ->condition('um.field_municipality_ref_target_id', $gid)
+    ->execute()
+    ->fetchField();
 
-    if ($type) {
-      $storage_handler = \Drupal::entityTypeManager()->getStorage("node");
-      $entities = $storage_handler->loadByProperties(["type" => $type]);
-      $storage_handler->delete($entities);
-    }
+    return $result;
   }
 
   /**
