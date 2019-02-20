@@ -137,17 +137,4 @@ abstract class ScrapQueueWorkerBase extends QueueWorkerBase implements
     return $managedFile ? $managedFile->id() : NULL;
   }
 
-  /**
-   * Get node from btj_scrapper_nodes table by its url from scrapped entity.
-   */
-  public function getNodebyURL($url) {
-    $nid = \Drupal::database()->select('btj_scrapper_nodes', 'n')
-      ->fields('n', ['entity_id'])
-      ->condition('n.item_url', $url)
-      ->execute()
-      ->fetchField();
-
-    return $nid;
-  }
-
 }
