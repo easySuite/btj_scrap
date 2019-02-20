@@ -2,11 +2,11 @@
 
 namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
-use \Drupal\file\Entity\File;
+use Drupal\file\Entity\File;
 use Drupal\taxonomy\Entity\Term;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 abstract class ScrapQueueWorkerBase extends QueueWorkerBase implements
   ContainerFactoryPluginInterface {
@@ -138,31 +138,16 @@ abstract class ScrapQueueWorkerBase extends QueueWorkerBase implements
   }
 
   /**
-   * Get node from btj_scrapper_nodes table by its hash from scrapped entity.
+   * Get node from btj_scrapper_nodes table by its url from scrapped entity.
    */
-  public function getNodebyHash($hash) {
+  public function getNodebyURL($url) {
     $nid = \Drupal::database()->select('btj_scrapper_nodes', 'n')
       ->fields('n', ['entity_id'])
-      ->condition('n.item_hash', $hash)
+      ->condition('n.item_url', $url)
       ->execute()
       ->fetchField();
 
     return $nid;
-  }
-
-  /**
-   * Save relations between drupal node and scrapped item.
-   */
-  public function setNodeRelations($nid, $bundle, $hash, $url) {
-    $connection = \Drupal::database();
-    $connection->merge('btj_scrapper_nodes')
-      ->keys(['item_hash' => $hash])
-      ->fields([
-        'entity_id' => $nid,
-        'bundle' => $bundle,
-        'item_url' => $url,
-      ])
-      ->execute();
   }
 
 }

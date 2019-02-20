@@ -9,12 +9,13 @@ use Drupal\Core\Database\Database;
  * Implements hook_schema().
  */
 function btj_scrapper_schema() {
-  $schema['btj_scrapper_nodes'] = [
-    'descrition' => 'Provide relation between drupal nodes and scrapped articles.',
+  $table_name = 'btj_scrapper_relations';
+  $schema[$table_name] = [
+    'description' => 'Provide relation between drupal nodes and scrapped articles.',
     'fields' => [
       'bundle' => [
         'description' => 'Entity type.',
-        'type' => 'varchar_ascii',
+        'type' => 'varchar',
         'length' => 128,
         'not null' => TRUE,
         'default' => '',
@@ -23,38 +24,60 @@ function btj_scrapper_schema() {
         'description' => 'Entity id of the scrapped articles.',
         'type' => 'int',
         'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
       ],
-      'item_hash' => [
-        'description' => 'MD5 hash of the scrapped article.',
-        'type' => 'varchar_ascii',
-        'length' => 32,
-        'not null' => TRUE,
-        'default' => '',
+      'uid' => [
+        'description' => 'User identifier to be assigned to the created node.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+      ],
+      'gid' => [
+        'description' => 'Group/Municipality identifier to be assigned to the created node.',
+        'type' => 'int',
+        'unsigned' => TRUE,
       ],
       'item_url' => [
         'description' => 'URL of the item on the target site.',
-        'type' => 'varchar_ascii',
+        'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ],
+      'type' => [
+        'description' => 'Type of the container to be used for scrapping',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'status' => [
+        'description' => 'Status of the item, if it is sent to the queue.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'weight' => [
+        'description' => 'Priorities of the items to be scrapped first.',
+        'type' => 'int',
+        'default' => 1,
+      ],
     ],
-    'primary key' => ['entity_id', 'item_hash']
+    'primary key' => ['item_url'],
   ];
 
   return $schema;
 }
 
+/**
+ * Create a relation database for the scrapped items mapping.
+ */
 function btj_scrapper_update_8001() {
-  $table_name = 'btj_scrapper_nodes';
+  $table_name = 'btj_scrapper_relations';
   $schema[$table_name] = [
-    'descrition' => 'Provide relation between drupal nodes and scrapped articles.',
+    'description' => 'Provide relation between drupal nodes and scrapped articles.',
     'fields' => [
       'bundle' => [
         'description' => 'Entity type.',
-        'type' => 'varchar_ascii',
+        'type' => 'varchar',
         'length' => 128,
         'not null' => TRUE,
         'default' => '',
@@ -63,25 +86,44 @@ function btj_scrapper_update_8001() {
         'description' => 'Entity id of the scrapped articles.',
         'type' => 'int',
         'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
       ],
-      'item_hash' => [
-        'description' => 'MD5 hash of the scrapped article.',
-        'type' => 'varchar_ascii',
-        'length' => 32,
-        'not null' => TRUE,
-        'default' => '',
+      'uid' => [
+        'description' => 'User identifier to be assigned to the created node.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+      ],
+      'gid' => [
+        'description' => 'Group/Municipality identifier to be assigned to the created node.',
+        'type' => 'int',
+        'unsigned' => TRUE,
       ],
       'item_url' => [
         'description' => 'URL of the item on the target site.',
-        'type' => 'varchar_ascii',
+        'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
       ],
+      'type' => [
+        'description' => 'Type of the container to be used for scrapping',
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'status' => [
+        'description' => 'Status of the item, if it is sent to the queue.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'weight' => [
+        'description' => 'Priorities of the items to be scrapped first.',
+        'type' => 'int',
+        'default' => 1,
+      ],
     ],
-    'primary key' => ['entity_id', 'item_hash']
+    'primary key' => ['item_url'],
   ];
 
   $database = Database::getConnection()->schema();

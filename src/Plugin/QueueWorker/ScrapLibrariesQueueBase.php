@@ -2,15 +2,16 @@
 
 namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 
+use Drupal\btj_scrapper\Controller\ScrapController;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\opening_hours\OpeningHours\Instance;
 use Drupal\opening_hours\Services\InstanceManager;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\node\Entity\Node;
-use BTJ\Scrapper\Transport\GouteHttpTransport;
-use BTJ\Scrapper\Service\CSLibraryService;
-use BTJ\Scrapper\Service\AxiellLibraryService;
 use BTJ\Scrapper\Container\LibraryContainer;
+use BTJ\Scrapper\Service\AxiellLibraryService;
+use BTJ\Scrapper\Service\CSLibraryService;
+use BTJ\Scrapper\Transport\GouteHttpTransport;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides base functionality for the Import Content From XML Queue Workers.
@@ -57,13 +58,9 @@ class ScrapLibrariesQueueBase extends ScrapQueueWorkerBase {
    * {@inheritdoc}
    */
   public function processItem($item) {
-    $url = $item->link;
-    $type = $item->type;
-    $municipality = $item->municipality;
-    $author = $item->uid;
-
     $transport = new GouteHttpTransport();
 
+    $type = $item->type;
     $scrapper = NULL;
     if ($type == 'cslibrary') {
       $scrapper = new CSLibraryService($transport);
@@ -76,19 +73,19 @@ class ScrapLibrariesQueueBase extends ScrapQueueWorkerBase {
     }
 
     $container = new LibraryContainer();
-    $scrapper->libraryScrap($url, $container);
+    $scrapper->libraryScrap($item->link, $container);
+    sleep(5);
 
-    $nid = $this->getNodebyHash($container->getHash());
-    if ($nid) {
-      $node = Node::load($nid);
+    if ($item->entity_id) {
+      $node = Node::load($item->entity_id);
       $this->nodePrepare($container, $node);
     }
     else {
       $node = Node::create(['type' => 'ding_library']);
       $this->nodePrepare($container, $node);
-      $node->field_municipality->target_id = $municipality;
+      $node->field_municipality->target_id = $item->gid;
     }
-    $node->setOwnerId($author);
+    $node->setOwnerId($item->uid);
     $node->save();
 
     // Assign opening hours.
@@ -109,9 +106,13 @@ class ScrapLibrariesQueueBase extends ScrapQueueWorkerBase {
       $node->save();
     }
 
-    $this->setNodeRelations($node->id(), 'ding_library', $container->getHash(), $url);
+    $controller = new ScrapController();
+    $controller->updateRelations($item->link, $item->bundle, $node->id(), $item->uid, $item->gid, $item->type, 0);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   function nodePrepare($container, &$node) {
     $node->setTitle($container->getTitle());
 

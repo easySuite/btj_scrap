@@ -2,9 +2,10 @@
 
 namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 
+use Drupal\btj_scrapper\Controller\ScrapController;
+use Drupal\node\Entity\Node;
 use BTJ\Scrapper\Container\EventContainer;
 use BTJ\Scrapper\Container\EventContainerInterface;
-use Drupal\node\Entity\Node;
 use BTJ\Scrapper\Transport\GouteHttpTransport;
 use BTJ\Scrapper\Service\CSLibraryService;
 use BTJ\Scrapper\Service\AxiellLibraryService;
@@ -18,14 +19,9 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
    * {@inheritdoc}
    */
   public function processItem($item) {
-    // Get the content array.
-    $url = $item->link;
-    $type = $item->type;
-    $municipality = $item->municipality;
-    $author = $item->uid;
-
     $transport = new GouteHttpTransport();
 
+    $type = $item->type;
     $scrapper = NULL;
     if ($type == 'cslibrary') {
       $scrapper = new CSLibraryService($transport);
@@ -38,22 +34,23 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
     }
 
     $container = new EventContainer();
-    $scrapper->eventScrap($url, $container);
+    $scrapper->eventScrap($item->link, $container);
+    sleep(5);
 
-    $nid = $this->getNodebyHash($container->getHash());
-    if ($nid) {
-      $node = Node::load($nid);
+    if ($item->entity_id) {
+      $node = Node::load($item->entity_id);
       $this->nodePrepare($container, $node);
     }
     else {
       $node = Node::create(['type' => 'ding_event']);
       $this->nodePrepare($container, $node);
-      $node->field_municipality->target_id = $municipality;
+      $node->field_municipality->target_id = $item->gid;
     }
-    $node->setOwnerId($author);
+    $node->setOwnerId($item->uid);
     $node->save();
 
-    $this->setNodeRelations($node->id(), 'ding_event', $container->getHash(), $url);
+    $controller = new ScrapController();
+    $controller->updateRelations($item->link, $item->bundle, $node->id(), $item->uid, $item->gid, $item->type, 0);
   }
 
   /**
