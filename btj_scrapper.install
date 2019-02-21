@@ -13,6 +13,11 @@ function btj_scrapper_schema() {
   $schema[$table_name] = [
     'description' => 'Provide relation between drupal nodes and scrapped articles.',
     'fields' => [
+      'rid' => [
+        'description' => 'Primary key of relation identifier',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ],
       'bundle' => [
         'description' => 'Entity type.',
         'type' => 'varchar',
@@ -61,7 +66,7 @@ function btj_scrapper_schema() {
         'default' => 1,
       ],
     ],
-    'primary key' => ['item_url'],
+    'primary key' => ['rid'],
   ];
 
   return $schema;
@@ -75,6 +80,11 @@ function btj_scrapper_update_8001() {
   $schema[$table_name] = [
     'description' => 'Provide relation between drupal nodes and scrapped articles.',
     'fields' => [
+      'rid' => [
+        'description' => 'Primary key of relation identifier',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ],
       'bundle' => [
         'description' => 'Entity type.',
         'type' => 'varchar',
@@ -123,7 +133,7 @@ function btj_scrapper_update_8001() {
         'default' => 1,
       ],
     ],
-    'primary key' => ['item_url'],
+    'primary key' => ['rid'],
   ];
 
   $database = Database::getConnection()->schema();
