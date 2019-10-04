@@ -6,7 +6,7 @@ use Drupal\btj_scrapper\Controller\ScrapController;
 use Drupal\node\Entity\Node;
 use BTJ\Scrapper\Container\EventContainer;
 use BTJ\Scrapper\Container\EventContainerInterface;
-use BTJ\Scrapper\Transport\GouteHttpTransport;
+use BTJ\Scrapper\Transport\GoutteHttpTransport;
 use BTJ\Scrapper\Service\CSLibraryService;
 use BTJ\Scrapper\Service\AxiellLibraryService;
 
@@ -19,7 +19,7 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
    * {@inheritdoc}
    */
   public function processItem($item) {
-    $transport = new GouteHttpTransport();
+    $transport = new GoutteHttpTransport();
 
     $type = $item->type;
     $scrapper = NULL;

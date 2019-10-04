@@ -1,7 +1,1 @@
-btj_scrapper.scrap:
-  path: '/scrap'
-  defaults:
-    _controller: '\Drupal\btj_scrapper\Controller\ScrapController::scrap'
-    _title: 'Scrap event'
-  requirements:
-    _permission: 'access content'
+

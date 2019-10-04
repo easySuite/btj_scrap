@@ -12,8 +12,8 @@ field_name: field_scrapping_type
 entity_type: group
 bundle: municipality
 label: 'Scrapping Type'
-description: 'Related CMS where the content is scrapped from'
-required: false
+description: 'Related CMS where the content is scrapped from.'
+required: true
 translatable: false
 default_value: {  }
 default_value_callback: ''

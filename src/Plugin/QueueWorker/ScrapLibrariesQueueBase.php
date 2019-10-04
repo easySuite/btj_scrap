@@ -10,7 +10,7 @@ use Drupal\node\Entity\Node;
 use BTJ\Scrapper\Container\LibraryContainer;
 use BTJ\Scrapper\Service\AxiellLibraryService;
 use BTJ\Scrapper\Service\CSLibraryService;
-use BTJ\Scrapper\Transport\GouteHttpTransport;
+use BTJ\Scrapper\Transport\GoutteHttpTransport;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -58,7 +58,7 @@ class ScrapLibrariesQueueBase extends ScrapQueueWorkerBase {
    * {@inheritdoc}
    */
   public function processItem($item) {
-    $transport = new GouteHttpTransport();
+    $transport = new GoutteHttpTransport();
 
     $type = $item->type;
     $scrapper = NULL;

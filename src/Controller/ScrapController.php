@@ -5,9 +5,6 @@ namespace Drupal\btj_scrapper\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\group\Entity\GroupInterface;
-use BTJ\Scrapper\Transport\GouteHttpTransport;
-use BTJ\Scrapper\Service\CSLibraryService;
-use BTJ\Scrapper\Service\AxiellLibraryService;
 use BTJ\Scrapper\Crawler;
 use BTJ\Scrapper\Container\EventContainer;
 use BTJ\Scrapper\Container\NewsContainer;
@@ -17,24 +14,6 @@ use BTJ\Scrapper\Container\LibraryContainer;
  * Implement scrap controller.
  */
 class ScrapController extends ControllerBase {
-
-  /**
-   * Scrap single event based on the hardcoded link.
-   */
-  public function scrap() {
-
-    $rows = \Drupal::database()->select('btj_scrapper_relations', 'bsr')
-      ->fields('bsr')
-      ->condition('bsr.status', 0)
-      ->orderBy('weight', 'DESC')
-      ->range(0, 100)
-      ->execute()
-      ->fetchAll();
-
-    return [
-      '#markup' => 'hoho',
-    ];
-  }
 
   /**
    * Get related user of the given municipality.
@@ -54,19 +33,11 @@ class ScrapController extends ControllerBase {
    * Prepare scrap container for content fetch.
    */
   public function prepare(GroupInterface $group, $bundle) {
-    $transport = new GouteHttpTransport();
-    // Prepare scrapper.
-    $scrapper = NULL;
+    /** @var \BTJ\Scrapper\Service\ServiceRepositoryInterface $serviceRepository */
+    $serviceRepository = \Drupal::service('btj_scrapper_service_repository');
+
     $type = $group->get('field_scrapping_type')->first()->getString();
-    if ($type == 'cslibrary') {
-      $scrapper = new CSLibraryService($transport);
-    }
-    elseif ($type == 'axiel') {
-      $scrapper = new AxiellLibraryService($transport);
-    }
-    if (!$scrapper) {
-      return;
-    }
+    $scrapper = $serviceRepository->getService($type);
 
     $url = $group->get('field_scrapping_url')->first()->getString();
     $crawler = new Crawler($scrapper);

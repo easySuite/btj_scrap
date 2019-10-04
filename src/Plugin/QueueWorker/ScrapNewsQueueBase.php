@@ -5,7 +5,7 @@ namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 use BTJ\Scrapper\Container\NewsContainer;
 use BTJ\Scrapper\Service\CSLibraryService;
 use BTJ\Scrapper\Service\AxiellLibraryService;
-use BTJ\Scrapper\Transport\GouteHttpTransport;
+use BTJ\Scrapper\Transport\GoutteHttpTransport;
 use Drupal\btj_scrapper\Controller\ScrapController;
 use Drupal\node\Entity\Node;
 
@@ -16,10 +16,10 @@ class ScrapNewsQueueBase extends ScrapQueueWorkerBase {
 
   /**
    * {@inheritdoc}
-   * 
+   *
    */
   public function processItem($item) {
-    $transport = new GouteHttpTransport();
+    $transport = new GoutteHttpTransport();
 
     $type = $item->type;
     $scrapper = NULL;
