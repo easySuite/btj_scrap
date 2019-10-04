@@ -1,0 +1,5 @@
+entity.group.btw_crawler_settings:
+  route_name: entity.group.btj_crawler_settings
+  base_route: entity.group.canonical
+  title: Crawler settings
+  weight: 99
