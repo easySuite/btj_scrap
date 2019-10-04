@@ -107,7 +107,7 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
   }
 
   private function buildSettingsKey(Group $group) {
-    return 'group_' . $group->id() . '_crawlser_settings';
+    return 'group_' . $group->id() . '_crawler_settings';
   }
 
   /**
