@@ -2,15 +2,46 @@
 
 namespace Drupal\btj_scrapper\Form;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\field\Entity\FieldConfig;
 use Drupal\group\Entity\Group;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ * Class GroupCrawlerSettingsForm.
+ */
 class GroupCrawlerSettingsForm extends ConfigFormBase {
 
   const FORM_ID = 'btj_scrapper.group_crawler.settings_form';
 
   const CONFIG_ID = 'btj_scrapper.group_crawler.settings';
+
+  protected $entityFieldManager;
+
+  /**
+   * GroupCrawlerSettingsForm constructor.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
+   */
+  public function __construct(ConfigFactoryInterface $config_factory, EntityFieldManagerInterface $entityFieldManager) {
+    $this->entityFieldManager = $entityFieldManager;
+
+    parent::__construct($config_factory);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('config.factory'),
+      $container->get('entity_field.manager')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -32,54 +63,93 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, Group $group = NULL) {
-    $entities = [
-      'events' => $this->t('Events'),
-      'news' => $this->t('News'),
-      'libraries' => $this->t('Libraries'),
-    ];
-
     $config = $this
       ->config(self::CONFIG_ID)
       ->get($this->buildSettingsKey($group));
 
-    $form['crawler'] = [
+    $form['scrapper_settings'] = [
       '#tree' => TRUE,
     ];
 
     $form_state->setTemporaryValue('group_entity', $group);
 
-    foreach ($entities as $entity => $label) {
-      $form['crawler'][$entity] = [
-        '#type' => 'details',
-        '#title' => $label,
-      ];
+    $entity = 'events';
+    $label = $this->t('Events');
 
-      $form['crawler'][$entity]['uri'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('@label list path', ['@label' => $label]),
-        '#description' => $this->t('URI path component to append to main url. This is where the list of the entities are located.'),
-        '#default_value' => $config[$entity]['uri'] ?? '',
-      ];
+    $form['scrapper_settings'][$entity] = [
+      '#type' => 'details',
+      '#title' => $label,
+    ];
 
-      $form['crawler'][$entity]['link'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('@label link', ['@label' => $label]),
-        '#description' => $this->t('CSS selector for the main link'),
-        '#default_value' => $config[$entity]['link'] ?? '',
-      ];
+    $form['scrapper_settings'][$entity]['crawler'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Crawler settings'),
+    ];
 
-      $form['crawler'][$entity]['pager_prev'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('@label pager previous link', ['@label' => $label]),
-        '#description' => $this->t('CSS selector for pager previous link'),
-        '#default_value' => $config[$entity]['pager_prev'] ?? '',
-      ];
+    $eventSettingsElements = &$form['scrapper_settings'][$entity]['crawler'];
+    $eventConfig = $config[$entity];
 
-      $form['crawler'][$entity]['pager_next'] = [
-        '#type' => 'textfield',
-        '#title' => $this->t('@label pager next link', ['@label' => $label]),
-        '#description' => $this->t('CSS selector for pager next link'),
-        '#default_value' => $config[$entity]['pager_next'] ?? '',
+    $eventSettingsElements['uri'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('@label collection path', ['@label' => $label]),
+      '#description' => $this->t('URI path component to append to main url. This is where the list of the entities are located.'),
+      '#default_value' => $eventConfig['crawler']['uri'] ?? '',
+    ];
+
+    $eventSettingsElements['link'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('@label link', ['@label' => $label]),
+      '#description' => $this->t('CSS selector for the main link'),
+      '#default_value' => $eventConfig['crawler']['link'] ?? '',
+    ];
+
+    $eventSettingsElements['pager_prev'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('@label pager previous link', ['@label' => $label]),
+      '#description' => $this->t('CSS selector for pager previous link'),
+      '#default_value' => $eventConfig['crawler']['pager_prev'] ?? '',
+    ];
+
+    $eventSettingsElements['pager_next'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('@label pager next link', ['@label' => $label]),
+      '#description' => $this->t('CSS selector for pager next link'),
+      '#default_value' => $eventConfig['crawler']['pager_next'] ?? '',
+    ];
+
+    $form['scrapper_settings'][$entity]['field_mapping'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Field mapping'),
+    ];
+
+    $nodeFieldsDefinitions = $this->entityFieldManager->getFieldDefinitions(
+      'node',
+      'ding_event'
+    );
+
+    $nodeFields = [];
+    foreach ($nodeFieldsDefinitions as $nodeFieldDefinition) {
+      if (!$nodeFieldDefinition instanceof FieldConfig && 'title' != $nodeFieldDefinition->getName()) {
+        continue;
+      }
+
+      $fieldName = $nodeFieldDefinition->getName();
+      $fieldLabel = (string) $nodeFieldDefinition->getLabel();
+
+      $nodeFields[$fieldName] = $fieldLabel;
+    }
+
+    asort($nodeFields);
+
+    $event_field_mapping_elements = &$form['scrapper_settings'][$entity]['field_mapping'];
+    foreach ($nodeFields as $name => $label) {
+      $event_field_mapping_elements[$name] = [
+        'source_field' => [
+          '#type' => 'textfield',
+          '#title' => $label,
+          '#default_value' => $eventConfig['field_mapping'][$name] ?? '',
+          '#description' => $this->t('CSS selector for <em>@label</em> field value', ['@label' => $label]),
+        ],
       ];
     }
 
@@ -97,7 +167,7 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
 
     $key = $this->buildSettingsKey($form_state->getTemporaryValue('group_entity'));
     $this->config(self::CONFIG_ID)
-      ->set($key, $values['crawler'])
+      ->set($key, $values['scrapper_settings'])
       ->save();
 
     parent::submitForm(
@@ -106,6 +176,15 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
     );
   }
 
+  /**
+   * Builds unique config key to store settings per group.
+   *
+   * @param \Drupal\group\Entity\Group $group
+   *   Group entity.
+   *
+   * @return string
+   *   Config key.
+   */
   private function buildSettingsKey(Group $group) {
     return 'group_' . $group->id() . '_crawler_settings';
   }
@@ -117,7 +196,7 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
     parent::validateForm(
       $form,
       $form_state
-    ); // TODO: Change the autogenerated stub
+    );
   }
 
   /**
