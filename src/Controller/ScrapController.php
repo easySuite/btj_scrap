@@ -2,7 +2,8 @@
 
 namespace Drupal\btj_scrapper\Controller;
 
-
+use BTJ\Scrapper\Service\ConfigurableServiceInterface;
+use Drupal\btj_scrapper\Form\GroupCrawlerSettingsForm;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\group\Entity\GroupInterface;
 use BTJ\Scrapper\Crawler;
@@ -38,6 +39,14 @@ class ScrapController extends ControllerBase {
 
     $type = $group->get('field_scrapping_type')->first()->getString();
     $scrapper = $serviceRepository->getService($type);
+
+    if ($scrapper instanceof ConfigurableServiceInterface) {
+      $config = $this
+        ->config(GroupCrawlerSettingsForm::CONFIG_ID)
+        ->get(GroupCrawlerSettingsForm::buildSettingsKey($group));
+
+      $scrapper->setConfig($config);
+    }
 
     $url = $group->get('field_scrapping_url')->first()->getString();
     $crawler = new Crawler($scrapper);

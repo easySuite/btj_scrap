@@ -8,6 +8,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\group\Entity\Group;
+use Drupal\group\Entity\GroupInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -65,7 +66,7 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state, Group $group = NULL) {
     $config = $this
       ->config(self::CONFIG_ID)
-      ->get($this->buildSettingsKey($group));
+      ->get(self::buildSettingsKey($group));
 
     $form['scrapper_settings'] = [
       '#tree' => TRUE,
@@ -96,25 +97,18 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
       '#default_value' => $eventConfig['crawler']['uri'] ?? '',
     ];
 
-    $eventSettingsElements['link'] = [
+    $eventSettingsElements['link_selector'] = [
       '#type' => 'textfield',
       '#title' => $this->t('@label link', ['@label' => $label]),
       '#description' => $this->t('CSS selector for the main link'),
-      '#default_value' => $eventConfig['crawler']['link'] ?? '',
+      '#default_value' => $eventConfig['crawler']['link_selector'] ?? '',
     ];
 
-    $eventSettingsElements['pager_prev'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('@label pager previous link', ['@label' => $label]),
-      '#description' => $this->t('CSS selector for pager previous link'),
-      '#default_value' => $eventConfig['crawler']['pager_prev'] ?? '',
-    ];
-
-    $eventSettingsElements['pager_next'] = [
+    $eventSettingsElements['pager_next_selector'] = [
       '#type' => 'textfield',
       '#title' => $this->t('@label pager next link', ['@label' => $label]),
       '#description' => $this->t('CSS selector for pager next link'),
-      '#default_value' => $eventConfig['crawler']['pager_next'] ?? '',
+      '#default_value' => $eventConfig['crawler']['pager_next_selector'] ?? '',
     ];
 
     $form['scrapper_settings'][$entity]['field_mapping'] = [
@@ -144,7 +138,7 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
     $event_field_mapping_elements = &$form['scrapper_settings'][$entity]['field_mapping'];
     foreach ($nodeFields as $name => $label) {
       $event_field_mapping_elements[$name] = [
-        'source_field' => [
+        'selector' => [
           '#type' => 'textfield',
           '#title' => $label,
           '#default_value' => $eventConfig['field_mapping'][$name] ?? '',
@@ -165,7 +159,7 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
 
-    $key = $this->buildSettingsKey($form_state->getTemporaryValue('group_entity'));
+    $key = self::buildSettingsKey($form_state->getTemporaryValue('group_entity'));
     $this->config(self::CONFIG_ID)
       ->set($key, $values['scrapper_settings'])
       ->save();
@@ -177,15 +171,15 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
   }
 
   /**
-   * Builds unique config key to store settings per group.
+   * Builds unique config key to store settings for respective group.
    *
-   * @param \Drupal\group\Entity\Group $group
+   * @param \Drupal\group\Entity\GroupInterface $group
    *   Group entity.
    *
    * @return string
    *   Config key.
    */
-  private function buildSettingsKey(Group $group) {
+  public static function buildSettingsKey(GroupInterface $group) {
     return 'group_' . $group->id() . '_crawler_settings';
   }
 
