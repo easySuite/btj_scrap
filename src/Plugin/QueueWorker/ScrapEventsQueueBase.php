@@ -2,13 +2,13 @@
 
 namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 
+use BTJ\Scrapper\Service\ConfigurableServiceInterface;
 use Drupal\btj_scrapper\Controller\ScrapController;
+use Drupal\btj_scrapper\Form\GroupCrawlerSettingsForm;
+use Drupal\group\Entity\Group;
 use Drupal\node\Entity\Node;
 use BTJ\Scrapper\Container\EventContainer;
 use BTJ\Scrapper\Container\EventContainerInterface;
-use BTJ\Scrapper\Transport\GoutteHttpTransport;
-use BTJ\Scrapper\Service\CSLibraryService;
-use BTJ\Scrapper\Service\AxiellLibraryService;
 
 /**
  * Provides base functionality for the Import Content From XML Queue Workers.
@@ -19,18 +19,17 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
    * {@inheritdoc}
    */
   public function processItem($item) {
-    $transport = new GoutteHttpTransport();
+    /** @var \BTJ\Scrapper\Service\ServiceRepositoryInterface $serviceRepository */
+    $serviceRepository = \Drupal::service('btj_scrapper_service_repository');
+    $scrapper = $serviceRepository->getService($item->type);
 
-    $type = $item->type;
-    $scrapper = NULL;
-    if ($type == 'cslibrary') {
-      $scrapper = new CSLibraryService($transport);
-    }
-    elseif ($type == 'axiel') {
-      $scrapper = new AxiellLibraryService($transport);
-    }
-    if (!$scrapper) {
-      return;
+    if ($scrapper instanceof ConfigurableServiceInterface) {
+      $group = Group::load($item->gid);
+
+      $config = \Drupal::config(GroupCrawlerSettingsForm::CONFIG_ID)
+        ->get(GroupCrawlerSettingsForm::buildSettingsKey($group));
+
+      $scrapper->setConfig($config);
     }
 
     $container = new EventContainer();
@@ -96,6 +95,10 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
    * Prepare dave field to be saved on node creation.
    */
   public function prepareEventDate(EventContainerInterface $container) {
+    if (empty($container->getMonth())) {
+      return [];
+    }
+
     $mapping = [
       'januari' => '01',
       'februari' => '02',

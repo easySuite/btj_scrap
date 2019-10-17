@@ -2,6 +2,7 @@
 
 namespace Drupal\btj_scrapper\Form;
 
+use BTJ\Scrapper\Container\EventContainer;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
@@ -116,27 +117,23 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Field mapping'),
     ];
 
-    $nodeFieldsDefinitions = $this->entityFieldManager->getFieldDefinitions(
-      'node',
-      'ding_event'
+    $eventContainerReflection = new \ReflectionClass(EventContainer::class);
+    /** @var \ReflectionProperty[] $eventContainerFields */
+    $eventContainerFields = $eventContainerReflection->getProperties();
+    $eventContainerFields = array_merge(
+      $eventContainerFields,
+      $eventContainerReflection->getParentClass()->getProperties()
     );
 
-    $nodeFields = [];
-    foreach ($nodeFieldsDefinitions as $nodeFieldDefinition) {
-      if (!$nodeFieldDefinition instanceof FieldConfig && 'title' != $nodeFieldDefinition->getName()) {
-        continue;
-      }
-
-      $fieldName = $nodeFieldDefinition->getName();
-      $fieldLabel = (string) $nodeFieldDefinition->getLabel();
-
-      $nodeFields[$fieldName] = $fieldLabel;
-    }
-
-    asort($nodeFields);
+    usort($eventContainerFields, function ($left, $right) {
+      return strcmp($left->getName(), $right->getName());
+    });
 
     $event_field_mapping_elements = &$form['scrapper_settings'][$entity]['field_mapping'];
-    foreach ($nodeFields as $name => $label) {
+    foreach ($eventContainerFields as $eventContainerField) {
+      $name = $eventContainerField->getName();
+      $label = ucfirst($name);
+
       $event_field_mapping_elements[$name] = [
         'selector' => [
           '#type' => 'textfield',

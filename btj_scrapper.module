@@ -1,13 +1,9 @@
 <?php
+
 /**
  * @file
  * Main module hooks implementation.
  */
-
-use Drupal\Core\Url;
-use Drupal\Core\Render\Element;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 
 use \Drupal\group\Entity\GroupInterface;
 use \Drupal\btj_scrapper\Controller\ScrapController;
@@ -97,6 +93,23 @@ function btj_scrapper_cron() {
     ->range(0, 100)
     ->execute()
     ->fetchAll();
+
+  // TODO: DEBUG INFO.
+//  $row = reset($rows);
+//  $transport = new GoutteHttpTransport();
+//  $scrapper = new AxiellLibraryService($transport);
+//
+//  if ($scrapper instanceof ConfigurableServiceInterface) {
+//    $group = Group::load($row->gid);
+//
+//    $config = \Drupal::config(GroupCrawlerSettingsForm::CONFIG_ID)
+//      ->get(GroupCrawlerSettingsForm::buildSettingsKey($group));
+//
+//    $scrapper->setConfig($config);
+//  }
+//
+//  $container = new EventContainer();
+//  $scrapper->eventScrap($row->item_url, $container);
 
   /** @var QueueFactory $queue_factory */
   $queue_factory = \Drupal::service('queue');
