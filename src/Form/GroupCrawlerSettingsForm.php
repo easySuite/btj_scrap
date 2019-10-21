@@ -130,24 +130,59 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
     });
 
     $event_field_mapping_elements = &$form['scrapper_settings'][$entity]['field_mapping'];
+
+    $table = [
+      '#type' => 'table',
+      '#header' => [
+        $this->t('CSS selector'),
+        $this->t('Regex filter'),
+      ],
+    ];
+
     foreach ($eventContainerFields as $eventContainerField) {
       $name = $eventContainerField->getName();
       $label = ucfirst($name);
 
-      $event_field_mapping_elements[$name] = [
+      $table[$name] = [
         'selector' => [
           '#type' => 'textfield',
           '#title' => $label,
-          '#default_value' => $eventConfig['field_mapping'][$name] ?? '',
-          '#description' => $this->t('CSS selector for <em>@label</em> field value', ['@label' => $label]),
+          '#default_value' => $eventConfig['field_mapping']['mapping_table'][$name]['selector'] ?? '',
+          '#description' => $this->t('CSS selector for <em>@label</em> field value.', ['@label' => $label]),
+        ],
+        'regex' => [
+          '#type' => 'textfield',
+          '#description' => $this->t('Apply regular expression filter for <em>@label</em> field.', ['@label' => $label]),
+          '#default_value' => $eventConfig['field_mapping']['mapping_table'][$name]['regex'] ?? '',
         ],
       ];
     }
+
+    $event_field_mapping_elements['mapping_table'] = $table;
 
     return parent::buildForm(
       $form,
       $form_state
     );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    $values = $form_state->getValues()['scrapper_settings'];
+
+    foreach ($values as $k => $v) {
+      foreach ($v['field_mapping']['mapping_table'] ?? [] as $field => $mapping) {
+        // Hence the '@' - we only outline the respective erroneous field.
+        if (!empty($mapping['regex']) && FALSE === @preg_match("/{$mapping['regex']}/", NULL)) {
+          $form_state->setError(
+            $form['scrapper_settings'][$k]['field_mapping']['mapping_table'][$field]['regex'],
+            $this->t('Invalid regular expression for field @label.', ['@label' => ucfirst($field)])
+          );
+        }
+      }
+    }
   }
 
   /**
@@ -178,16 +213,6 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
    */
   public static function buildSettingsKey(GroupInterface $group) {
     return 'group_' . $group->id() . '_crawler_settings';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    parent::validateForm(
-      $form,
-      $form_state
-    );
   }
 
   /**
