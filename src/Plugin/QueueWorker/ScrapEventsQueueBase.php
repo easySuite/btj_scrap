@@ -58,7 +58,7 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
   function nodePrepare($container, &$node) {
     $node->setTitle($container->getTitle());
 
-    $node->set('field_ding_event_lead', $container->getLead());
+    $node->set('field_ding_event_lead', $this->plainText($container->getLead()));
 
     $node->field_ding_event_body->value = $container->getBody();
     $node->field_ding_event_body->format = 'full_html';
@@ -89,6 +89,17 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
         $node->set('field_ding_event_target', $target);
       }
     }
+  }
+
+  /**
+   * TODO:
+   *
+   * @param $string
+   *
+   * @return string
+   */
+  public function plainText($string): string {
+    return trim(strip_tags(str_replace(['<br>', '<br />', '<br/>'], "\n", $string)));
   }
 
   /**
