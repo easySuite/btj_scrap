@@ -19,18 +19,9 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
    * {@inheritdoc}
    */
   public function processItem($item) {
-    /** @var \BTJ\Scrapper\Service\ServiceRepositoryInterface $serviceRepository */
+    /** @var \Drupal\btj_scrapper\Scraping\ServiceRepositoryInterface $serviceRepository */
     $serviceRepository = \Drupal::service('btj_scrapper_service_repository');
-    $scrapper = $serviceRepository->getService($item->type);
-
-    if ($scrapper instanceof ConfigurableServiceInterface) {
-      $group = Group::load($item->gid);
-
-      $config = \Drupal::config(GroupCrawlerSettingsForm::CONFIG_ID)
-        ->get(GroupCrawlerSettingsForm::buildSettingsKey($group));
-
-      $scrapper->setConfig($config);
-    }
+    $scrapper = $serviceRepository->getService($item->type, $item->gid);
 
     $container = new EventContainer();
     $scrapper->eventScrap($item->link, $container);

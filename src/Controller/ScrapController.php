@@ -34,7 +34,7 @@ class ScrapController extends ControllerBase {
    * Prepare scrap container for content fetch.
    */
   public function prepare(GroupInterface $group, $bundle) {
-    /** @var \BTJ\Scrapper\Service\ServiceRepositoryInterface $serviceRepository */
+    /** @var \Drupal\btj_scrapper\Scraping\ServiceRepositoryInterface $serviceRepository */
     $serviceRepository = \Drupal::service('btj_scrapper_service_repository');
 
     $type = $group->get('field_scrapping_type')->first()->getString();
