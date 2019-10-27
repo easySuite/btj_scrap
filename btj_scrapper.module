@@ -5,13 +5,16 @@
  * Main module hooks implementation.
  */
 
-use \Drupal\group\Entity\GroupInterface;
-use \Drupal\btj_scrapper\Controller\ScrapController;
+use Drupal\group\Entity\GroupInterface;
+use Drupal\btj_scrapper\Controller\ScrapController;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 
 /**
  * Implements hook_form_alter().
  */
-function btj_scrapper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function btj_scrapper_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   if (in_array($form_id, ['node_ding_event_form', 'node_ding_news_form', 'node_ding_library_form'])) {
     foreach (array_keys($form['actions']) as $action) {
       if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
@@ -24,7 +27,7 @@ function btj_scrapper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $f
 /**
  * Add municipality reference to node field on save.
  */
-function btj_node_add_form_submit(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+function btj_node_add_form_submit(array $form, FormStateInterface $form_state) {
   $nid = $form_state->get('nid');
   if (empty($nid)) {
     return;
@@ -40,7 +43,7 @@ function btj_node_add_form_submit(array $form, \Drupal\Core\Form\FormStateInterf
     ->getTargetIdentifier();
 
   if (!$municipality) {
-    \Drupal::messenger()->addMessage(t('You don\'t have any municipality ownership assigned. Please contact site administrator.', MessengerInterface::TYPE_WARNING));
+    \Drupal::messenger()->addMessage(t('You don\'t have any municipality ownership assigned. Please contact site administrator.'), MessengerInterface::TYPE_WARNING);
   }
   $node = \Drupal\node\Entity\Node::load($nid);
   $node->set('field_municipality', $municipality);
@@ -58,7 +61,7 @@ function btj_node_add_form_submit(array $form, \Drupal\Core\Form\FormStateInterf
 /**
  * Implements hook_entity_delete().
  */
-function btj_scrapper_entity_delete(Drupal\Core\Entity\EntityInterface $entity) {
+function btj_scrapper_entity_delete(EntityInterface $entity) {
   \Drupal::database()
     ->delete('btj_scrapper_relations')
     ->condition('entity_id', $entity->id())

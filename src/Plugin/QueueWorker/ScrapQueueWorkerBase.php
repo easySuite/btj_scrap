@@ -111,8 +111,10 @@ abstract class ScrapQueueWorkerBase extends QueueWorkerBase implements
    * Get list image id to be saved on node creation.
    */
   protected function prepareImage(string $url) {
+    $destination = 'public://';
+    $fileName = sha1($url);
     /** @var \Drupal\file\FileInterface $file */
-    $file = system_retrieve_file($url, NULL, FALSE, FILE_EXISTS_REPLACE);
+    $file = system_retrieve_file($url, $destination . $fileName, FALSE, FILE_EXISTS_REPLACE);
     if (!$file) {
       return NULL;
     }
@@ -128,7 +130,7 @@ abstract class ScrapQueueWorkerBase extends QueueWorkerBase implements
     $fileEntity = File::create();
     $fileEntity->setFileUri($file);
     $fileEntity->setMimeType($image_info['mime']);
-    $fileEntity->setFilename(basename($file));
+    $fileEntity->setFilename($fileName . '.' . $image_info['mime']);
 
     /** @var \Drupal\file\FileInterface $managedFile */
     $managedFile = file_copy($fileEntity, $file . '.' . $extension, FILE_EXISTS_REPLACE);

@@ -94,7 +94,7 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
   }
 
   /**
-   * Prepare dave field to be saved on node creation.
+   * Prepare date field to be saved on node creation.
    */
   public function prepareEventDate(EventContainerInterface $container) {
     if (empty($container->getMonth())) {
@@ -118,17 +118,12 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
     $year = date("Y");
     $month = $mapping[$container->getMonth()];
     $date = $container->getDate();
-    $hours = explode(' – ', $container->getTime());
 
-    if (empty($hours[0])) {
-      $hours[0] = '00';
-    }
-    $start = "{$year}-{$month}-{$date}T{$hours[0]}:00";
+    $hours = [];
+    preg_match('/(\d{2}\.\d{2})(.*(\d{2}\.\d{2}))?/', $container->getTime(), $hours);
 
-    if (empty($hours[1])) {
-      $hours[1] = '00';
-    }
-    $end = "{$year}-{$month}-{$date}T{$hours[1]}:00";
+    $start = "{$year}-{$month}-{$date}T" . str_replace('.', ':', $hours[1] ?? '00.00') . ':00';
+    $end = "{$year}-{$month}-{$date}T" . str_replace('.', ':', $hours[3] ?? '00.00') . ':00';
 
     return ['value' => $start, 'end_value' => $end];
   }

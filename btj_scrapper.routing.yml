@@ -10,3 +10,4 @@ entity.group.btj_crawler_settings:
     parameters:
       group:
         type: entity:group
+    _admin_route: true

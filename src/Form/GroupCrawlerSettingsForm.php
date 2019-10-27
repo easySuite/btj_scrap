@@ -175,7 +175,7 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
     foreach ($values as $k => $v) {
       foreach ($v['field_mapping']['mapping_table'] ?? [] as $field => $mapping) {
         // Hence the '@' - we only outline the respective erroneous field.
-        if (!empty($mapping['regex']) && FALSE === @preg_match("/{$mapping['regex']}/", NULL)) {
+        if (!empty($mapping['regex']) && FALSE === @preg_match("{$mapping['regex']}", NULL)) {
           $form_state->setError(
             $form['scrapper_settings'][$k]['field_mapping']['mapping_table'][$field]['regex'],
             $this->t('Invalid regular expression for field @label.', ['@label' => ucfirst($field)])

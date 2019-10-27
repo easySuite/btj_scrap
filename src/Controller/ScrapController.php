@@ -66,6 +66,7 @@ class ScrapController extends ControllerBase {
     $links = $crawler->getCTLinks($url, $container);
     $gid = $group->id();
     $uid = $this->getAuthorByMunicipality($gid);
+    // TODO: $uid can be empty and it leads to fatal errors.
     foreach ($links as $link) {
       $this->updateRelations($link, $bundle, NULL, $uid, $gid, $type);
     }
