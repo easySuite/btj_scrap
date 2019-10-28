@@ -50,7 +50,7 @@ class ScrapNewsQueueBase extends ScrapQueueWorkerBase {
     $node->save();
 
     $controller = new ScrapController();
-    $controller->updateRelations($item->link, $item->bundle, $node->id(), $item->uid, $item->gid, $item->type, 0);
+    $controller->writeRelations($item->link, $item->bundle, $node->id(), $item->uid, $item->gid, $item->type, 0);
   }
 
   /**

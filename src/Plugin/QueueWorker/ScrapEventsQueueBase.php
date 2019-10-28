@@ -2,10 +2,7 @@
 
 namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 
-use BTJ\Scrapper\Service\ConfigurableServiceInterface;
 use Drupal\btj_scrapper\Controller\ScrapController;
-use Drupal\btj_scrapper\Form\GroupCrawlerSettingsForm;
-use Drupal\group\Entity\Group;
 use Drupal\node\Entity\Node;
 use BTJ\Scrapper\Container\EventContainer;
 use BTJ\Scrapper\Container\EventContainerInterface;
@@ -27,20 +24,17 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
     $scrapper->eventScrap($item->link, $container);
     sleep(5);
 
-    if ($item->entity_id) {
-      $node = Node::load($item->entity_id);
-      $this->nodePrepare($container, $node);
-    }
-    else {
+    $node = Node::load($item->entity_id);
+
+    if (empty($node)) {
       $node = Node::create(['type' => 'ding_event']);
-      $this->nodePrepare($container, $node);
       $node->field_municipality->target_id = $item->gid;
     }
+
+    $this->nodePrepare($container, $node);
+
     $node->setOwnerId($item->uid);
     $node->save();
-
-    $controller = new ScrapController();
-    $controller->updateRelations($item->link, $item->bundle, $node->id(), $item->uid, $item->gid, $item->type, 0);
   }
 
   /**

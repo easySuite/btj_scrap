@@ -38,15 +38,7 @@ class ScrapController extends ControllerBase {
     $serviceRepository = \Drupal::service('btj_scrapper_service_repository');
 
     $type = $group->get('field_scrapping_type')->first()->getString();
-    $scrapper = $serviceRepository->getService($type);
-
-    if ($scrapper instanceof ConfigurableServiceInterface) {
-      $config = $this
-        ->config(GroupCrawlerSettingsForm::CONFIG_ID)
-        ->get(GroupCrawlerSettingsForm::buildSettingsKey($group));
-
-      $scrapper->setConfig($config);
-    }
+    $scrapper = $serviceRepository->getService($type, $group->id());
 
     $url = $group->get('field_scrapping_url')->first()->getString();
     $crawler = new Crawler($scrapper);
@@ -68,28 +60,43 @@ class ScrapController extends ControllerBase {
     $uid = $this->getAuthorByMunicipality($gid);
     // TODO: $uid can be empty and it leads to fatal errors.
     foreach ($links as $link) {
-      $this->updateRelations($link, $bundle, NULL, $uid, $gid, $type);
+      $this->writeRelations($link, $bundle, NULL, $uid, $gid, $type);
     }
   }
 
   /**
-   * Update relations between scrapped item and the drupal node.
+   * Write relation between scrapped item and the drupal node.
    */
-  public function updateRelations($url, $bundle, $nid = NULL, $uid = NULL, $gid = NULL, $type = '', $status = 0, $weight = 0) {
+  public function writeRelations($url, $bundle, $nid = NULL, $uid = NULL, $gid = NULL, $type = '') {
     $connection = \Drupal::database();
+
     $connection->merge('btj_scrapper_relations')
-      ->keys(['item_url' => $url])
+      ->keys([
+        'item_url' => $url,
+      ])
       ->fields([
         'bundle' => $bundle,
         'entity_id' => $nid,
         'uid' => $uid,
         'gid' => $gid,
         'type' => $type,
-        'status' => $status,
-        'weight' => ($bundle == 'library') ? $weight + 1 : $weight,
+        'status' => 0,
+        'weight' => ($bundle == 'library') ? 0 : 1,
       ])
       ->execute();
   }
 
+  /**
+   * Marks all relations as processed by default.
+   */
+  public function resetRelations() {
+    $connection = \Drupal::database();
+
+    $connection->update('btj_scrapper_relations')
+      ->fields([
+        'status' => 1,
+      ])
+      ->execute();
+  }
 
 }
