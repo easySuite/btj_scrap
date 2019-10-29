@@ -22,11 +22,9 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
 
     $container = new EventContainer();
     $scrapper->eventScrap($item->link, $container);
-    sleep(5);
+    sleep(1);
 
-    $node = Node::load($item->entity_id);
-
-    if (empty($node)) {
+    if (empty($item->entity_id) || NULL === ($node = Node::load($item->entity_id))) {
       $node = Node::create(['type' => 'ding_event']);
       $node->field_municipality->target_id = $item->gid;
     }
@@ -35,6 +33,15 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
 
     $node->setOwnerId($item->uid);
     $node->save();
+
+    ScrapController::writeRelations(
+      $item->link,
+      $node->bundle(),
+      $node->id(),
+      $node->getRevisionAuthor()->id(),
+      $item->gid,
+      $item->type
+    );
   }
 
   /**
@@ -48,9 +55,12 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
     $node->field_ding_event_body->value = $container->getBody();
     $node->field_ding_event_body->format = 'full_html';
 
-    $node->field_ding_event_list_image->target_id = $this->prepareImage($container->getListImage());
-    $node->field_ding_event_list_image->alt = $container->getTitle();
-    $node->field_ding_event_list_image->title = $container->getTitle();
+    if (!empty($container->getListImage())) {
+      $node->field_ding_event_list_image->target_id = $this->prepareImage($container->getListImage());
+      $node->field_ding_event_list_image->alt = $container->getTitle();
+      $node->field_ding_event_list_image->title = $container->getTitle();
+    }
+
     $node->set('field_ding_event_price', $container->getPrice());
     $node->set('field_ding_event_date', $this->prepareEventDate($container));
 
@@ -116,8 +126,20 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
     $hours = [];
     preg_match('/(\d{2}\.\d{2})(.*(\d{2}\.\d{2}))?/', $container->getTime(), $hours);
 
-    $start = "{$year}-{$month}-{$date}T" . str_replace('.', ':', $hours[1] ?? '00.00') . ':00';
-    $end = "{$year}-{$month}-{$date}T" . str_replace('.', ':', $hours[3] ?? '00.00') . ':00';
+    $dt = new \DateTime();
+    $dt->setDate($year, $month, $date);
+    $dt->setTime(0, 0);
+    if (!empty($hours[1])) {
+      call_user_func_array(['setTime', $dt], explode('.', $hours[1]));
+    }
+
+//    $start = "{$year}-{$month}-{$date}T" . str_replace('.', ':', $hours[1] ?? '00.00') . ':00';
+    $start = $dt->format('Y-m-d\TH:i:s');
+    if (!empty($hours[3])) {
+      call_user_func_array(['setTime', $dt], explode('.', $hours[3]));
+    }
+//    $end = "{$year}-{$month}-{$date}T" . str_replace('.', ':', $hours[3] ?? '00.00') . ':00';
+    $end = $dt->format('Y-m-d\TH:i:s');
 
     return ['value' => $start, 'end_value' => $end];
   }

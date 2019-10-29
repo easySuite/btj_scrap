@@ -2,8 +2,6 @@
 
 namespace Drupal\btj_scrapper\Controller;
 
-use BTJ\Scrapper\Service\ConfigurableServiceInterface;
-use Drupal\btj_scrapper\Form\GroupCrawlerSettingsForm;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\group\Entity\GroupInterface;
 use BTJ\Scrapper\Crawler;
@@ -13,13 +11,15 @@ use BTJ\Scrapper\Container\LibraryContainer;
 
 /**
  * Implement scrap controller.
+ *
+ * TODO: This one is all but static methods, maybe rework as service.
  */
 class ScrapController extends ControllerBase {
 
   /**
    * Get related user of the given municipality.
    */
-  private function getAuthorByMunicipality($gid) {
+  public static function getAuthorByMunicipality($gid) {
     $connection = \Drupal::database();
     $result =$connection->select('user__field_municipality_ref', 'um')
       ->fields('um', ['entity_id'])
@@ -33,7 +33,7 @@ class ScrapController extends ControllerBase {
   /**
    * Prepare scrap container for content fetch.
    */
-  public function prepare(GroupInterface $group, $bundle) {
+  public static function prepare(GroupInterface $group, $bundle) {
     /** @var \Drupal\btj_scrapper\Scraping\ServiceRepositoryInterface $serviceRepository */
     $serviceRepository = \Drupal::service('btj_scrapper_service_repository');
 
@@ -44,52 +44,58 @@ class ScrapController extends ControllerBase {
     $crawler = new Crawler($scrapper);
 
     switch ($bundle) {
-      case 'library':
+      case 'ding_library':
         $container = new LibraryContainer();
         break;
-      case 'news':
+      case 'ding_news':
         $container = new NewsContainer();
         break;
-      case 'event':
+      case 'ding_event':
         $container = new EventContainer();
         break;
     }
 
     $links = $crawler->getCTLinks($url, $container);
     $gid = $group->id();
-    $uid = $this->getAuthorByMunicipality($gid);
+    $uid = self::getAuthorByMunicipality($gid);
     // TODO: $uid can be empty and it leads to fatal errors.
     foreach ($links as $link) {
-      $this->writeRelations($link, $bundle, NULL, $uid, $gid, $type);
+      self::writeRelations($link, $bundle, NULL, $uid, $gid, $type);
     }
   }
 
   /**
    * Write relation between scrapped item and the drupal node.
    */
-  public function writeRelations($url, $bundle, $nid = NULL, $uid = NULL, $gid = NULL, $type = '') {
+  public static function writeRelations($url, $bundle, $nid = NULL, $uid = NULL, $gid = NULL, $type = '') {
     $connection = \Drupal::database();
+
+    $fields = [
+      'bundle' => $bundle,
+      'entity_id' => $nid,
+      'uid' => $uid,
+      'gid' => $gid,
+      'type' => $type,
+      'status' => 0,
+      'weight' => ($bundle == 'library') ? 0 : 1,
+    ];
+
+    $fields = array_filter($fields, function ($v) {
+      return !is_null($v);
+    });
 
     $connection->merge('btj_scrapper_relations')
       ->keys([
         'item_url' => $url,
       ])
-      ->fields([
-        'bundle' => $bundle,
-        'entity_id' => $nid,
-        'uid' => $uid,
-        'gid' => $gid,
-        'type' => $type,
-        'status' => 0,
-        'weight' => ($bundle == 'library') ? 0 : 1,
-      ])
+      ->fields($fields)
       ->execute();
   }
 
   /**
    * Marks all relations as processed by default.
    */
-  public function resetRelations() {
+  public static function resetRelations() {
     $connection = \Drupal::database();
 
     $connection->update('btj_scrapper_relations')

@@ -5,6 +5,7 @@
  * Main module hooks implementation.
  */
 
+use Drupal\Core\Queue\QueueInterface;
 use Drupal\group\Entity\GroupInterface;
 use Drupal\btj_scrapper\Controller\ScrapController;
 use Drupal\Core\Entity\EntityInterface;
@@ -69,22 +70,31 @@ function btj_scrapper_entity_delete(EntityInterface $entity) {
 }
 
 /**
- * Implements hook_ENTITY_TYPE_update().
- *
- * Prepare queue on group creation.
- */
-function btj_scrapper_group_update(GroupInterface $group) {
-//  $controller = new ScrapController();
-//  $bundles = ['library', 'news', 'event'];
-//  foreach ($bundles as $bundle) {
-//    $controller->prepare($group, $bundle);
-//  }
-}
-
-/**
  * Implements hook_cron().
  */
 function btj_scrapper_cron() {
+  $btj_config = \Drupal::configFactory()->getEditable('btj_scrapper.settings');
+  $last_cron = $btj_config->get('btj_queue_last_cron') ?? 0;
+
+  if (!$last_cron || $last_cron < REQUEST_TIME) {
+    btj_scrapper_fill_queue();
+
+    $btj_config
+      ->set('btj_queue_last_cron', REQUEST_TIME + 86400)
+      ->save();
+  }
+}
+
+/**
+ * Gather and fills the queue(s) with item(s) eager processing.
+ *
+ * This should run as seldom possible, since it resets queue items.
+ * Also, the rareness of this function call is to make sure that
+ * queue items are actually processable within the pause between runs.
+ *
+ * TODO: Might stall when too much group entities are processed.
+ */
+function btj_scrapper_fill_queue() {
   /** @var \Drupal\Core\Entity\EntityTypeInterface $entityDefinition */
   $entityTypeManager = \Drupal::service('entity_type.manager');
   /** @var \Drupal\Core\Entity\EntityTypeInterface $entityDefinition */
@@ -100,24 +110,22 @@ function btj_scrapper_cron() {
     ->getStorage('group')
     ->loadByProperties($loadProperties);
 
-  $controller = new ScrapController();
-  $controller->resetRelations();
-
-  $bundles = [/*'library', 'news',*/ 'event'];
-  foreach ($group_entities as $group_entity) {
-    foreach ($bundles as $bundle) {
-      $controller->prepare($group_entity, $bundle);
-    }
-  }
+  ScrapController::resetRelations();
 
   /** @var \Drupal\Core\Queue\QueueFactory $queue_factory */
   $queue_factory = \Drupal::service('queue');
-  /** @var \Drupal\Core\Queue\QueueInterface $queue */
-  $queue = $queue_factory->get('btj_scrap_queue');
-  // Reset the queue to exclude possibilities of repeated items in the queue.
-  // It is vital that the queue is actually processable during the pause
-  // between consequent cron runs.
-  $queue->deleteQueue();
+
+  $bundles = [/*'ding_library', 'ding_news',*/ 'ding_event'];
+  /** @var \Drupal\Core\Queue\QueueInterface[] $queues */
+  $queues = [];
+  foreach ($bundles as $bundle) {
+    foreach ($group_entities as $group_entity) {
+      ScrapController::prepare($group_entity, $bundle);
+    }
+
+    $queues[$bundle] = $queue_factory->get('btj_scrapper_' . $bundle);
+    $queues[$bundle]->deleteQueue();
+  }
 
   $rows = \Drupal::database()->select('btj_scrapper_relations', 'bsr')
     ->fields('bsr')
@@ -136,7 +144,8 @@ function btj_scrapper_cron() {
     $item->link = $row->item_url;
     $item->uid = $row->uid;
 
-    $queue->createItem($item);
+    if (array_key_exists($row->bundle, $queues) && $queues[$row->bundle] instanceof QueueInterface) {
+      $queues[$row->bundle]->createItem($item);
+    }
   }
-
 }
