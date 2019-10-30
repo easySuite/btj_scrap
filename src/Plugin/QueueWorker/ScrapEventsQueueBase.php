@@ -12,6 +12,8 @@ use BTJ\Scrapper\Container\EventContainerInterface;
  */
 class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
 
+  public const DATE_FORMAT = 'Y-m-d\TH:i:s';
+
   /**
    * {@inheritdoc}
    */
@@ -101,11 +103,8 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
    * Prepare date field to be saved on node creation.
    */
   public function prepareEventDate(EventContainerInterface $container) {
-    if (empty($container->getMonth())) {
-      return [];
-    }
-
     $mapping = [
+      '' => date('m'),
       'januari' => '01',
       'februari' => '02',
       'mars' => '03',
@@ -119,27 +118,30 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
       'november' => '11',
       'december' => '12',
     ];
-    $year = date("Y");
+    $year = date('Y');
     $month = $mapping[$container->getMonth()];
     $date = $container->getDate();
 
     $hours = [];
     preg_match('/(\d{2}\.\d{2})(.*(\d{2}\.\d{2}))?/', $container->getTime(), $hours);
 
-    $dt = new \DateTime();
+    $dt = new \DateTime('now');
     $dt->setDate($year, $month, $date);
     $dt->setTime(0, 0);
+
     if (!empty($hours[1])) {
-      call_user_func_array(['setTime', $dt], explode('.', $hours[1]));
+      list($h, $m) = explode('.', $hours[1]);
+      $dt->setTime($h, $m);
     }
 
-//    $start = "{$year}-{$month}-{$date}T" . str_replace('.', ':', $hours[1] ?? '00.00') . ':00';
-    $start = $dt->format('Y-m-d\TH:i:s');
+    $start = $dt->format(self::DATE_FORMAT);
+
     if (!empty($hours[3])) {
-      call_user_func_array(['setTime', $dt], explode('.', $hours[3]));
+      list($h, $m) = explode('.', $hours[3]);
+      $dt->setTime($h, $m);
     }
-//    $end = "{$year}-{$month}-{$date}T" . str_replace('.', ':', $hours[3] ?? '00.00') . ':00';
-    $end = $dt->format('Y-m-d\TH:i:s');
+
+    $end = $dt->format(self::DATE_FORMAT);
 
     return ['value' => $start, 'end_value' => $end];
   }
