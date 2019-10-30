@@ -6,7 +6,6 @@
  */
 
 use Drupal\Core\Queue\QueueInterface;
-use Drupal\group\Entity\GroupInterface;
 use Drupal\btj_scrapper\Controller\ScrapController;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -76,6 +75,8 @@ function btj_scrapper_cron() {
   $btj_config = \Drupal::configFactory()->getEditable('btj_scrapper.settings');
   $last_cron = $btj_config->get('btj_queue_last_cron') ?? 0;
 
+  // So we want only to gather links for processing daily.
+  // This most likely is enough for a previous queue to be processed completely.
   if (!$last_cron || $last_cron < REQUEST_TIME) {
     btj_scrapper_fill_queue();
 
@@ -115,7 +116,7 @@ function btj_scrapper_fill_queue() {
   /** @var \Drupal\Core\Queue\QueueFactory $queue_factory */
   $queue_factory = \Drupal::service('queue');
 
-  $bundles = [/*'ding_library', 'ding_news',*/ 'ding_event'];
+  $bundles = ['ding_library', 'ding_news', 'ding_event'];
   /** @var \Drupal\Core\Queue\QueueInterface[] $queues */
   $queues = [];
   foreach ($bundles as $bundle) {
@@ -124,6 +125,8 @@ function btj_scrapper_fill_queue() {
     }
 
     $queues[$bundle] = $queue_factory->get('btj_scrapper_' . $bundle);
+    // Whoever left-over queue items are discarded and added again.
+    // Helps reducing duplicates.
     $queues[$bundle]->deleteQueue();
   }
 

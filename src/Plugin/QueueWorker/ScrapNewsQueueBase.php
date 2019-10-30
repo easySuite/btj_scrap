@@ -3,9 +3,6 @@
 namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 
 use BTJ\Scrapper\Container\NewsContainer;
-use BTJ\Scrapper\Service\CSLibraryService;
-use BTJ\Scrapper\Service\AxiellLibraryService;
-use BTJ\Scrapper\Transport\GoutteHttpTransport;
 use Drupal\btj_scrapper\Controller\ScrapController;
 use Drupal\node\Entity\Node;
 
@@ -19,38 +16,31 @@ class ScrapNewsQueueBase extends ScrapQueueWorkerBase {
    *
    */
   public function processItem($item) {
-    $transport = new GoutteHttpTransport();
-
-    $type = $item->type;
-    $scrapper = NULL;
-    if ($type == 'cslibrary') {
-      $scrapper = new CSLibraryService($transport);
-    }
-    elseif ($type == 'axiel') {
-      $scrapper = new AxiellLibraryService($transport);
-    }
-    if (!$scrapper) {
-      return;
-    }
+    /** @var \Drupal\btj_scrapper\Scraping\ServiceRepositoryInterface $serviceRepository */
+    $serviceRepository = \Drupal::service('btj_scrapper_service_repository');
+    $scrapper = $serviceRepository->getService($item->type, $item->gid);
 
     $container = new NewsContainer();
     $scrapper->newsScrap($item->link, $container);
-    sleep(5);
+    sleep(1);
 
-    if ($item->entity_id) {
-      $node = Node::load($item->entity_id);
-      $this->nodePrepare($container, $node);
-    }
-    else {
+    if (empty($item->entity_id) || NULL === ($node = Node::load($item->entity_id))) {
       $node = Node::create(['type' => 'ding_news']);
-      $this->nodePrepare($container, $node);
       $node->field_municipality->target_id = $item->gid;
     }
+
+    $this->nodePrepare($container, $node);
     $node->setOwnerId($item->uid);
     $node->save();
 
-    $controller = new ScrapController();
-    $controller->writeRelations($item->link, $item->bundle, $node->id(), $item->uid, $item->gid, $item->type, 0);
+    ScrapController::writeRelations(
+      $item->link,
+      $node->bundle(),
+      $node->id(),
+      $node->getRevisionAuthor()->id(),
+      $item->gid,
+      $item->type
+    );
   }
 
   /**

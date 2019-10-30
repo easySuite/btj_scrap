@@ -3,11 +3,11 @@
 namespace Drupal\btj_scrapper\Form;
 
 use BTJ\Scrapper\Container\EventContainer;
+use BTJ\Scrapper\Container\LibraryContainer;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\field\Entity\FieldConfig;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -89,7 +89,7 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
     ];
 
     $eventSettingsElements = &$form['scrapper_settings'][$entity]['crawler'];
-    $eventConfig = $config[$entity];
+    $eventConfig = $config[$entity] ?? [];
 
     $eventSettingsElements['uri'] = [
       '#type' => 'textfield',
@@ -117,19 +117,64 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Field mapping'),
     ];
 
-    $eventContainerReflection = new \ReflectionClass(EventContainer::class);
-    /** @var \ReflectionProperty[] $eventContainerFields */
-    $eventContainerFields = $eventContainerReflection->getProperties();
-    $eventContainerFields = array_merge(
-      $eventContainerFields,
-      $eventContainerReflection->getParentClass()->getProperties()
+    $event_field_mapping_elements = &$form['scrapper_settings'][$entity]['field_mapping'];
+    $event_field_mapping_elements['mapping_table'] = $this->buildFieldMappingTable(
+      EventContainer::class,
+      $eventConfig
     );
 
-    usort($eventContainerFields, function ($left, $right) {
+    $entity = 'library';
+    $label = $this->t('Library');
+
+    $form['scrapper_settings'][$entity] = [
+      '#type' => 'details',
+      '#title' => $label,
+    ];
+
+    $form['scrapper_settings'][$entity]['crawler'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Crawler settings'),
+    ];
+
+    $librarySettingsElements = &$form['scrapper_settings'][$entity]['crawler'];
+    $libraryConfig = $config[$entity] ?? [];
+
+    $librarySettingsElements['links'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('@label links', ['@label' => $label]),
+      '#description' => $this->t('List of library links to scrap on. One entry per line.'),
+      '#default_value' => $libraryConfig['crawler']['links'] ?? '',
+    ];
+
+    $form['scrapper_settings'][$entity]['field_mapping'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Field mapping'),
+    ];
+
+    $library_field_mapping_elements = &$form['scrapper_settings'][$entity]['field_mapping'];
+    $library_field_mapping_elements['mapping_table'] = $this->buildFieldMappingTable(
+      LibraryContainer::class,
+      $libraryConfig
+    );
+
+    return parent::buildForm(
+      $form,
+      $form_state
+    );
+  }
+
+  private function buildFieldMappingTable(string $className, array $config) {
+    $containerReflection = new \ReflectionClass($className);
+    /** @var \ReflectionProperty[] $containerFields */
+    $containerFields = $containerReflection->getProperties();
+    $containerFields = array_merge(
+      $containerFields,
+      $containerReflection->getParentClass()->getProperties()
+    );
+
+    usort($containerFields, function ($left, $right) {
       return strcmp($left->getName(), $right->getName());
     });
-
-    $event_field_mapping_elements = &$form['scrapper_settings'][$entity]['field_mapping'];
 
     $table = [
       '#type' => 'table',
@@ -139,31 +184,26 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
       ],
     ];
 
-    foreach ($eventContainerFields as $eventContainerField) {
-      $name = $eventContainerField->getName();
+    foreach ($containerFields as $containerField) {
+      $name = $containerField->getName();
       $label = ucfirst($name);
 
       $table[$name] = [
         'selector' => [
           '#type' => 'textfield',
           '#title' => $label,
-          '#default_value' => $eventConfig['field_mapping']['mapping_table'][$name]['selector'] ?? '',
+          '#default_value' => $config['field_mapping']['mapping_table'][$name]['selector'] ?? '',
           '#description' => $this->t('CSS selector for <em>@label</em> field value.', ['@label' => $label]),
         ],
         'regex' => [
           '#type' => 'textfield',
           '#description' => $this->t('Apply regular expression filter for <em>@label</em> field.', ['@label' => $label]),
-          '#default_value' => $eventConfig['field_mapping']['mapping_table'][$name]['regex'] ?? '',
+          '#default_value' => $config['field_mapping']['mapping_table'][$name]['regex'] ?? '',
         ],
       ];
     }
 
-    $event_field_mapping_elements['mapping_table'] = $table;
-
-    return parent::buildForm(
-      $form,
-      $form_state
-    );
+    return $table;
   }
 
   /**

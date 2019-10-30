@@ -77,7 +77,7 @@ class ScrapController extends ControllerBase {
       'gid' => $gid,
       'type' => $type,
       'status' => 0,
-      'weight' => ($bundle == 'library') ? 0 : 1,
+      'weight' => ('ding_library' === $bundle) ? 0 : 1,
     ];
 
     $fields = array_filter($fields, function ($v) {
