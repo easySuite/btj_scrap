@@ -77,13 +77,13 @@ function btj_scrapper_cron() {
 
   // So we want only to gather links for processing daily.
   // This most likely is enough for a previous queue to be processed completely.
-//  if (!$last_cron || $last_cron < REQUEST_TIME) {
+  if (!$last_cron || $last_cron < REQUEST_TIME) {
     btj_scrapper_fill_queue();
 
     $btj_config
       ->set('btj_queue_last_cron', REQUEST_TIME + 86400)
       ->save();
-//  }
+  }
 }
 
 /**
