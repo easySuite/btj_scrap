@@ -1,21 +1,20 @@
 <?php
+
 /**
  * @file
  * Main module hooks implementation.
  */
 
-use Drupal\Core\Url;
-use Drupal\Core\Render\Element;
+use Drupal\Core\Queue\QueueInterface;
+use Drupal\btj_scrapper\Controller\ScrapController;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
-
-use \Drupal\group\Entity\GroupInterface;
-use \Drupal\btj_scrapper\Controller\ScrapController;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 
 /**
  * Implements hook_form_alter().
  */
-function btj_scrapper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function btj_scrapper_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   if (in_array($form_id, ['node_ding_event_form', 'node_ding_news_form', 'node_ding_library_form'])) {
     foreach (array_keys($form['actions']) as $action) {
       if ($action != 'preview' && isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] === 'submit') {
@@ -28,7 +27,7 @@ function btj_scrapper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $f
 /**
  * Add municipality reference to node field on save.
  */
-function btj_node_add_form_submit(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+function btj_node_add_form_submit(array $form, FormStateInterface $form_state) {
   $nid = $form_state->get('nid');
   if (empty($nid)) {
     return;
@@ -44,7 +43,7 @@ function btj_node_add_form_submit(array $form, \Drupal\Core\Form\FormStateInterf
     ->getTargetIdentifier();
 
   if (!$municipality) {
-    \Drupal::messenger()->addMessage(t('You don\'t have any municipality ownership assigned. Please contact site administrator.', MessengerInterface::TYPE_WARNING));
+    \Drupal::messenger()->addMessage(t('You don\'t have any municipality ownership assigned. Please contact site administrator.'), MessengerInterface::TYPE_WARNING);
   }
   $node = \Drupal\node\Entity\Node::load($nid);
   $node->set('field_municipality', $municipality);
@@ -62,7 +61,7 @@ function btj_node_add_form_submit(array $form, \Drupal\Core\Form\FormStateInterf
 /**
  * Implements hook_entity_delete().
  */
-function btj_scrapper_entity_delete(Drupal\Core\Entity\EntityInterface $entity) {
+function btj_scrapper_entity_delete(EntityInterface $entity) {
   \Drupal::database()
     ->delete('btj_scrapper_relations')
     ->condition('entity_id', $entity->id())
@@ -70,26 +69,67 @@ function btj_scrapper_entity_delete(Drupal\Core\Entity\EntityInterface $entity) 
 }
 
 /**
- * Implements hook_ENTITY_TYPE_update().
- *
- * Prepare queue on group creation.
+ * Implements hook_cron().
  */
-function btj_scrapper_group_update(GroupInterface $group) {
-  $controller = new ScrapController();
-  $bundles = ['library', 'news', 'event'];
-  foreach ($bundles as $bundle) {
-    $controller->prepare($group, $bundle);
+function btj_scrapper_cron() {
+  $btj_config = \Drupal::configFactory()->getEditable('btj_scrapper.settings');
+  $last_cron = $btj_config->get('btj_queue_last_cron') ?? 0;
+
+  // So we want only to gather links for processing daily.
+  // This most likely is enough for a previous queue to be processed completely.
+  if (!$last_cron || $last_cron < REQUEST_TIME) {
+    btj_scrapper_fill_queue();
+
+    $btj_config
+      ->set('btj_queue_last_cron', REQUEST_TIME + 86400)
+      ->save();
   }
 }
 
 /**
- * Implements hook_cron().
+ * Gather and fills the queue(s) with item(s) eager processing.
+ *
+ * This should run as seldom possible, since it resets queue items.
+ * Also, the rareness of this function call is to make sure that
+ * queue items are actually processable within the pause between runs.
+ *
+ * TODO: Might stall when too much group entities are processed.
  */
-function btj_scrapper_cron() {
-  \Drupal::logger('btj_scrapper')
-    ->notice('Move prepared items from the relation table to the queue to be scrapped.');
+function btj_scrapper_fill_queue() {
+  /** @var \Drupal\Core\Entity\EntityTypeInterface $entityDefinition */
+  $entityTypeManager = \Drupal::service('entity_type.manager');
+  /** @var \Drupal\Core\Entity\EntityTypeInterface $entityDefinition */
+  $entityDefinition = $entityTypeManager->getDefinition('group');
 
-  // Move items to queue
+  $bundleField = $entityDefinition->getKey('bundle');
+  $loadProperties = [
+    $bundleField => 'municipality',
+  ];
+
+  /** @var \Drupal\group\Entity\GroupInterface[] $group_entities */
+  $group_entities = $entityTypeManager
+    ->getStorage('group')
+    ->loadByProperties($loadProperties);
+
+  ScrapController::resetRelations();
+
+  /** @var \Drupal\Core\Queue\QueueFactory $queue_factory */
+  $queue_factory = \Drupal::service('queue');
+
+  $bundles = ['ding_library', 'ding_news', 'ding_event'];
+  /** @var \Drupal\Core\Queue\QueueInterface[] $queues */
+  $queues = [];
+  foreach ($bundles as $bundle) {
+    foreach ($group_entities as $group_entity) {
+      ScrapController::prepare($group_entity, $bundle);
+    }
+
+    $queues[$bundle] = $queue_factory->get('btj_scrapper_' . $bundle);
+    // Whoever left-over queue items are discarded and added again.
+    // Helps reducing duplicates.
+    $queues[$bundle]->deleteQueue();
+  }
+
   $rows = \Drupal::database()->select('btj_scrapper_relations', 'bsr')
     ->fields('bsr')
     ->condition('bsr.status', 0)
@@ -98,8 +138,6 @@ function btj_scrapper_cron() {
     ->execute()
     ->fetchAll();
 
-  /** @var QueueFactory $queue_factory */
-  $queue_factory = \Drupal::service('queue');
   foreach ($rows as $row) {
     $item = new \stdClass();
     $item->gid = $row->gid;
@@ -109,13 +147,8 @@ function btj_scrapper_cron() {
     $item->link = $row->item_url;
     $item->uid = $row->uid;
 
-    /** @var QueueInterface $queue */
-    $queue = $queue_factory->get('btj_scrap_' . $row->bundle);
-    $queue->createItem($item);
-
-    // Update relations status.
-    $controller = new ScrapController();
-    $controller->updateRelations($row->item_url, $row->bundle, $row->entity_id, $row->uid, $row->gid, $row->type, 1);
+    if (array_key_exists($row->bundle, $queues) && $queues[$row->bundle] instanceof QueueInterface) {
+      $queues[$row->bundle]->createItem($item);
+    }
   }
-
 }

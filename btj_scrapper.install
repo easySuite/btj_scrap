@@ -43,7 +43,7 @@ function btj_scrapper_schema() {
       'item_url' => [
         'description' => 'URL of the item on the target site.',
         'type' => 'varchar',
-        'length' => 255,
+        'length' => 2048,
         'not null' => TRUE,
         'default' => '',
       ],
@@ -138,4 +138,21 @@ function btj_scrapper_update_8001() {
 
   $database = Database::getConnection()->schema();
   $database->createTable($table_name, $schema[$table_name]);
+}
+
+/**
+ * Extend the item url field length.
+ */
+function btj_scrapper_update_8002() {
+  $spec = [
+    'description' => 'URL of the item on the target site.',
+    'type' => 'varchar',
+    'length' => 2048,
+    'not null' => TRUE,
+    'default' => '',
+  ];
+
+  Database::getConnection()
+    ->schema()
+    ->changeField('btj_scrapper_relations', 'item_url', 'item_url', $spec);
 }

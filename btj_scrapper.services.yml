@@ -1,0 +1,19 @@
+services:
+  btj_http_transport:
+    class: '\BTJ\Scrapper\Transport\GoutteHttpTransport'
+
+  btj_scrapper_axiell_service:
+    class: '\BTJ\Scrapper\Service\AxiellLibraryService'
+    arguments: [ '@btj_http_transport' ]
+    public: false
+
+  btj_scrapper_cs_service:
+    class: '\BTJ\Scrapper\Service\CSLibraryService'
+    arguments: [ '@btj_http_transport' ]
+    public: false
+
+  btj_scrapper_service_repository:
+    class: '\Drupal\btj_scrapper\Scraping\ServiceRepository'
+    calls:
+      - [ 'addService', ['@btj_scrapper_axiell_service'] ]
+      - [ 'addService', ['@btj_scrapper_cs_service'] ]

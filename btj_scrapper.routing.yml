@@ -1,7 +1,13 @@
-btj_scrapper.scrap:
-  path: '/scrap'
+entity.group.btj_crawler_settings:
+  path: '/group/{group}/crawler'
   defaults:
-    _controller: '\Drupal\btj_scrapper\Controller\ScrapController::scrap'
-    _title: 'Scrap event'
+    _title: 'Crawler settings'
+    _title_callback: '\Drupal\btj_scrapper\Form\GroupCrawlerSettingsForm::title'
+    _form: '\Drupal\btj_scrapper\Form\GroupCrawlerSettingsForm'
   requirements:
-    _permission: 'access content'
+    _permission: 'administer group'
+  options:
+    parameters:
+      group:
+        type: entity:group
+    _admin_route: true

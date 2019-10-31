@@ -8,9 +8,6 @@ use Drupal\opening_hours\OpeningHours\Instance;
 use Drupal\opening_hours\Services\InstanceManager;
 use Drupal\node\Entity\Node;
 use BTJ\Scrapper\Container\LibraryContainer;
-use BTJ\Scrapper\Service\AxiellLibraryService;
-use BTJ\Scrapper\Service\CSLibraryService;
-use BTJ\Scrapper\Transport\GouteHttpTransport;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -58,33 +55,20 @@ class ScrapLibrariesQueueBase extends ScrapQueueWorkerBase {
    * {@inheritdoc}
    */
   public function processItem($item) {
-    $transport = new GouteHttpTransport();
-
-    $type = $item->type;
-    $scrapper = NULL;
-    if ($type == 'cslibrary') {
-      $scrapper = new CSLibraryService($transport);
-    }
-    elseif ($type == 'axiel') {
-      $scrapper = new AxiellLibraryService($transport);
-    }
-    if (!$scrapper) {
-      return;
-    }
+    /** @var \Drupal\btj_scrapper\Scraping\ServiceRepositoryInterface $serviceRepository */
+    $serviceRepository = \Drupal::service('btj_scrapper_service_repository');
+    $scrapper = $serviceRepository->getService($item->type, $item->gid);
 
     $container = new LibraryContainer();
     $scrapper->libraryScrap($item->link, $container);
-    sleep(5);
+    sleep(1);
 
-    if ($item->entity_id) {
-      $node = Node::load($item->entity_id);
-      $this->nodePrepare($container, $node);
-    }
-    else {
+    if (empty($item->entity_id) || NULL === ($node = Node::load($item->entity_id))) {
       $node = Node::create(['type' => 'ding_library']);
-      $this->nodePrepare($container, $node);
       $node->field_municipality->target_id = $item->gid;
     }
+
+    $this->nodePrepare($container, $node);
     $node->setOwnerId($item->uid);
     $node->save();
 
@@ -106,8 +90,14 @@ class ScrapLibrariesQueueBase extends ScrapQueueWorkerBase {
       $node->save();
     }
 
-    $controller = new ScrapController();
-    $controller->updateRelations($item->link, $item->bundle, $node->id(), $item->uid, $item->gid, $item->type, 0);
+    ScrapController::writeRelations(
+      $item->link,
+      $node->bundle(),
+      $node->id(),
+      $node->getRevisionAuthor()->id(),
+      $item->gid,
+      $item->type
+    );
   }
 
   /**
@@ -116,13 +106,14 @@ class ScrapLibrariesQueueBase extends ScrapQueueWorkerBase {
   function nodePrepare($container, &$node) {
     $node->setTitle($container->getTitle());
 
-
     $node->field_ding_library_body->value = $container->getBody();
     $node->field_ding_library_body->format = 'full_html';
 
-    $node->field_ding_library_title_image->target_id = $this->prepareImage($container->getTitleImage());
-    $node->field_ding_library_title_image->alt = $container->getTitle();
-    $node->field_ding_library_title_image->title = $container->getTitle();
+    if (!empty($container->getTitleImage())) {
+      $node->field_ding_library_title_image->target_id = $this->prepareImage($container->getTitleImage());
+      $node->field_ding_library_title_image->alt = $container->getTitle();
+      $node->field_ding_library_title_image->title = $container->getTitle();
+    }
 
     $node->field_ding_library_addresse->country_code = 'SE';
     $node->field_ding_library_addresse->locality = $container->getCity();

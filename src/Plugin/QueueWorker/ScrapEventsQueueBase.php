@@ -6,51 +6,44 @@ use Drupal\btj_scrapper\Controller\ScrapController;
 use Drupal\node\Entity\Node;
 use BTJ\Scrapper\Container\EventContainer;
 use BTJ\Scrapper\Container\EventContainerInterface;
-use BTJ\Scrapper\Transport\GouteHttpTransport;
-use BTJ\Scrapper\Service\CSLibraryService;
-use BTJ\Scrapper\Service\AxiellLibraryService;
 
 /**
  * Provides base functionality for the Import Content From XML Queue Workers.
  */
 class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
 
+  public const DATE_FORMAT = 'Y-m-d\TH:i:s';
+
   /**
    * {@inheritdoc}
    */
   public function processItem($item) {
-    $transport = new GouteHttpTransport();
-
-    $type = $item->type;
-    $scrapper = NULL;
-    if ($type == 'cslibrary') {
-      $scrapper = new CSLibraryService($transport);
-    }
-    elseif ($type == 'axiel') {
-      $scrapper = new AxiellLibraryService($transport);
-    }
-    if (!$scrapper) {
-      return;
-    }
+    /** @var \Drupal\btj_scrapper\Scraping\ServiceRepositoryInterface $serviceRepository */
+    $serviceRepository = \Drupal::service('btj_scrapper_service_repository');
+    $scrapper = $serviceRepository->getService($item->type, $item->gid);
 
     $container = new EventContainer();
     $scrapper->eventScrap($item->link, $container);
-    sleep(5);
+    sleep(1);
 
-    if ($item->entity_id) {
-      $node = Node::load($item->entity_id);
-      $this->nodePrepare($container, $node);
-    }
-    else {
+    if (empty($item->entity_id) || NULL === ($node = Node::load($item->entity_id))) {
       $node = Node::create(['type' => 'ding_event']);
-      $this->nodePrepare($container, $node);
       $node->field_municipality->target_id = $item->gid;
     }
+
+    $this->nodePrepare($container, $node);
+
     $node->setOwnerId($item->uid);
     $node->save();
 
-    $controller = new ScrapController();
-    $controller->updateRelations($item->link, $item->bundle, $node->id(), $item->uid, $item->gid, $item->type, 0);
+    ScrapController::writeRelations(
+      $item->link,
+      $node->bundle(),
+      $node->id(),
+      $node->getRevisionAuthor()->id(),
+      $item->gid,
+      $item->type
+    );
   }
 
   /**
@@ -59,14 +52,17 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
   function nodePrepare($container, &$node) {
     $node->setTitle($container->getTitle());
 
-    $node->set('field_ding_event_lead', $container->getLead());
+    $node->set('field_ding_event_lead', $this->plainText($container->getLead()));
 
     $node->field_ding_event_body->value = $container->getBody();
     $node->field_ding_event_body->format = 'full_html';
 
-    $node->field_ding_event_list_image->target_id = $this->prepareImage($container->getListImage());
-    $node->field_ding_event_list_image->alt = $container->getTitle();
-    $node->field_ding_event_list_image->title = $container->getTitle();
+    if (!empty($container->getListImage())) {
+      $node->field_ding_event_list_image->target_id = $this->prepareImage($container->getListImage());
+      $node->field_ding_event_list_image->alt = $container->getTitle();
+      $node->field_ding_event_list_image->title = $container->getTitle();
+    }
+
     $node->set('field_ding_event_price', $container->getPrice());
     $node->set('field_ding_event_date', $this->prepareEventDate($container));
 
@@ -93,10 +89,22 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
   }
 
   /**
-   * Prepare dave field to be saved on node creation.
+   * TODO:
+   *
+   * @param $string
+   *
+   * @return string
+   */
+  public function plainText($string): string {
+    return trim(strip_tags(str_replace(['<br>', '<br />', '<br/>'], "\n", $string)));
+  }
+
+  /**
+   * Prepare date field to be saved on node creation.
    */
   public function prepareEventDate(EventContainerInterface $container) {
     $mapping = [
+      '' => date('m'),
       'januari' => '01',
       'februari' => '02',
       'mars' => '03',
@@ -110,20 +118,30 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
       'november' => '11',
       'december' => '12',
     ];
-    $year = date("Y");
+    $year = date('Y');
     $month = $mapping[$container->getMonth()];
     $date = $container->getDate();
-    $hours = explode(' – ', $container->getTime());
 
-    if (empty($hours[0])) {
-      $hours[0] = '00';
-    }
-    $start = "{$year}-{$month}-{$date}T{$hours[0]}:00";
+    $hours = [];
+    preg_match('/(\d{1,2}(?:\.\d{2})?)-?((\d{1,2}(?:\.\d{2})?))?/', $container->getTime(), $hours);
 
-    if (empty($hours[1])) {
-      $hours[1] = '00';
+    $dt = new \DateTime('now');
+    $dt->setDate($year, $month, $date);
+    $dt->setTime(0, 0);
+
+    if (!empty($hours[1])) {
+      @list($h, $m) = explode('.', $hours[1]);
+      $dt->setTime($h, $m);
     }
-    $end = "{$year}-{$month}-{$date}T{$hours[1]}:00";
+
+    $start = $dt->format(self::DATE_FORMAT);
+
+    if (!empty($hours[3])) {
+      @list($h, $m) = explode('.', $hours[3]);
+      $dt->setTime($h, $m);
+    }
+
+    $end = $dt->format(self::DATE_FORMAT);
 
     return ['value' => $start, 'end_value' => $end];
   }
