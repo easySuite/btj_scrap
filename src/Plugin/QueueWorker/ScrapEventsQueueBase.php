@@ -123,21 +123,21 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
     $date = $container->getDate();
 
     $hours = [];
-    preg_match('/(\d{2}\.\d{2})(.*(\d{2}\.\d{2}))?/', $container->getTime(), $hours);
+    preg_match('/(\d{1,2}(?:\.\d{2})?)-?((\d{1,2}(?:\.\d{2})?))?/', $container->getTime(), $hours);
 
     $dt = new \DateTime('now');
     $dt->setDate($year, $month, $date);
     $dt->setTime(0, 0);
 
     if (!empty($hours[1])) {
-      list($h, $m) = explode('.', $hours[1]);
+      @list($h, $m) = explode('.', $hours[1]);
       $dt->setTime($h, $m);
     }
 
     $start = $dt->format(self::DATE_FORMAT);
 
     if (!empty($hours[3])) {
-      list($h, $m) = explode('.', $hours[3]);
+      @list($h, $m) = explode('.', $hours[3]);
       $dt->setTime($h, $m);
     }
 

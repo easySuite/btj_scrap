@@ -74,21 +74,21 @@ class ScrapLibrariesQueueBase extends ScrapQueueWorkerBase {
 
     // Assign opening hours.
     /** @var \Drupal\node\Entity\NodeType $libraryNodeType */
-//    $libraryNodeType = $this->entityTypeManager
-//      ->getStorage('node_type')
-//      ->load('ding_library');
-//    if ($libraryNodeType->getThirdPartySetting('opening_hours', 'oh_enabled', FALSE)) {
-//      $openingHoursInstances = $this->prepareHours($container->getOpeningHours());
-//
-//      /** @var \Drupal\opening_hours\OpeningHours\Instance $openingHoursInstance */
-//      foreach ($openingHoursInstances as $openingHoursInstance) {
-//        $openingHoursInstance->setNid($node->id());
-//        $this->ohoInstanceManager->save($openingHoursInstance);
-//      }
-//
-//      // Trigger a node save, so mobilesearch can track changes.
-//      $node->save();
-//    }
+    $libraryNodeType = $this->entityTypeManager
+      ->getStorage('node_type')
+      ->load('ding_library');
+    if ($libraryNodeType->getThirdPartySetting('opening_hours', 'oh_enabled', FALSE)) {
+      $openingHoursInstances = $this->prepareHours($container->getOpeningHours());
+
+      /** @var \Drupal\opening_hours\OpeningHours\Instance $openingHoursInstance */
+      foreach ($openingHoursInstances as $openingHoursInstance) {
+        $openingHoursInstance->setNid($node->id());
+        $this->ohoInstanceManager->save($openingHoursInstance);
+      }
+
+      // Trigger a node save, so mobilesearch can track changes.
+      $node->save();
+    }
 
     ScrapController::writeRelations(
       $item->link,
