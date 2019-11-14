@@ -37,6 +37,10 @@ class ScrapController extends ControllerBase {
     /** @var \Drupal\btj_scrapper\Scraping\ServiceRepositoryInterface $serviceRepository */
     $serviceRepository = \Drupal::service('btj_scrapper_service_repository');
 
+    if (!$group->get('field_scrapping_type')->count()) {
+      return;
+    }
+
     $type = $group->get('field_scrapping_type')->first()->getString();
     $scrapper = $serviceRepository->getService($type, $group->id());
 

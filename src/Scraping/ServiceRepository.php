@@ -44,7 +44,7 @@ class ServiceRepository implements ServiceRepositoryInterface {
       $config = \Drupal::config(GroupCrawlerSettingsForm::CONFIG_ID)
         ->get(GroupCrawlerSettingsForm::buildSettingsKey($group));
 
-      $scrapper->setConfig($config);
+      $scrapper->setConfig($config ?? []);
     }
 
     return $scrapper;
