@@ -77,7 +77,7 @@ class ScrapController extends ControllerBase {
     $fields = [
       'bundle' => $bundle,
       'entity_id' => $nid,
-      'uid' => $uid,
+      'uid' => !empty($uid) ? $uid : 1,
       'gid' => $gid,
       'type' => $type,
       'status' => 0,
