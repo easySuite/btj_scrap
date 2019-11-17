@@ -6,21 +6,38 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\file\Entity\File;
 use Drupal\taxonomy\Entity\Term;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-abstract class ScrapQueueWorkerBase extends QueueWorkerBase implements
-  ContainerFactoryPluginInterface {
+/**
+ * Class ScrapQueueWorkerBase.
+ */
+abstract class ScrapQueueWorkerBase extends QueueWorkerBase implements ContainerFactoryPluginInterface {
 
   /**
-   * {@inheritdoc}
+   * Logger instance.
+   *
+   * @var \Psr\Log\LoggerInterface
    */
-  public function __construct() {}
+  protected $logger;
+
+  /**
+   * ScrapQueueWorkerBase constructor.
+   *
+   * @param \Psr\Log\LoggerInterface $logger
+   *   Logger instance.
+   */
+  public function __construct(LoggerInterface $logger) {
+    $this->logger = $logger;
+  }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static();
+    return new static(
+      $container->get('logger.factory')->get('btj_scrapper')
+    );
   }
 
   /**
@@ -113,8 +130,19 @@ abstract class ScrapQueueWorkerBase extends QueueWorkerBase implements
   protected function prepareImage(string $url) {
     $destination = 'public://';
     $fileName = sha1($url);
-    /** @var \Drupal\file\FileInterface $file */
-    $file = system_retrieve_file($url, $destination . $fileName, FALSE, FILE_EXISTS_REPLACE);
+
+    try {
+      /** @var \Drupal\file\FileInterface $file */
+      $file = system_retrieve_file($url, $destination . $fileName, FALSE, FILE_EXISTS_REPLACE);
+    }
+    catch (\InvalidArgumentException $e) {
+      $this->logger->error('Failed to read image from "@url". Exception thrown with message "@message".', [
+        '@url' => $url,
+        '@message' => $e->getMessage(),
+      ]);
+      return NULL;
+    }
+
     if (!$file) {
       return NULL;
     }

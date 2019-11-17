@@ -134,7 +134,6 @@ function btj_scrapper_fill_queue() {
     ->fields('bsr')
     ->condition('bsr.status', 0)
     ->orderBy('weight', 'DESC')
-    ->range(0, 100)
     ->execute()
     ->fetchAll();
 
