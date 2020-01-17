@@ -4,6 +4,7 @@ namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 
 use Drupal\btj_scrapper\Controller\ScrapController;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\node\NodeInterface;
 use Drupal\opening_hours\OpeningHours\Instance;
 use Drupal\opening_hours\Services\InstanceManager;
 use Drupal\node\Entity\Node;
@@ -103,7 +104,12 @@ class ScrapLibrariesQueueBase extends ScrapQueueWorkerBase {
   /**
    * {@inheritdoc}
    */
-  function nodePrepare($container, &$node) {
+  function nodePrepare($container, NodeInterface &$node) {
+    // This, normally, should not happen.
+    if ('ding_library' !== $node->bundle()) {
+      return;
+    }
+
     $node->setTitle($container->getTitle());
 
     $node->field_ding_library_body->value = $container->getBody();
@@ -140,9 +146,9 @@ class ScrapLibrariesQueueBase extends ScrapQueueWorkerBase {
     $instances = [];
 
     foreach ($dayHours as $dayHour) {
-      list($start, $end) = explode('-', $dayHour);
-      list($startHour, $startMinute) = explode(':', $start);
-      list($endHour, $endMinute) = explode(':', $end);
+      [$start, $end] = explode('-', $dayHour);
+      [$startHour, $startMinute] = explode(':', $start);
+      [$endHour, $endMinute] = explode(':', $end);
 
       $instanceDate = clone($today);
 

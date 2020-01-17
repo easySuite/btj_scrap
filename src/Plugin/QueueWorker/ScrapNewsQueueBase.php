@@ -5,6 +5,7 @@ namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 use BTJ\Scrapper\Container\NewsContainer;
 use Drupal\btj_scrapper\Controller\ScrapController;
 use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
 
 /**
  * Provides base functionality for the Import Content From XML Queue Workers.
@@ -46,7 +47,12 @@ class ScrapNewsQueueBase extends ScrapQueueWorkerBase {
   /**
    * {@inheritdoc}
    */
-  function nodePrepare($container, &$node) {
+  function nodePrepare($container, NodeInterface &$node) {
+    // This, normally, should not happen.
+    if ('ding_news' !== $node->bundle()) {
+      return;
+    }
+
     $node->setTitle($container->getTitle());
 
     $node->set('field_ding_news_lead', $container->getLead());

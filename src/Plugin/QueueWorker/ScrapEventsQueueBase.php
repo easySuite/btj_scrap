@@ -6,6 +6,7 @@ use Drupal\btj_scrapper\Controller\ScrapController;
 use Drupal\node\Entity\Node;
 use BTJ\Scrapper\Container\EventContainer;
 use BTJ\Scrapper\Container\EventContainerInterface;
+use Drupal\node\NodeInterface;
 
 /**
  * Provides base functionality for the Import Content From XML Queue Workers.
@@ -49,7 +50,12 @@ class ScrapEventsQueueBase extends ScrapQueueWorkerBase {
   /**
    * {@inheritdoc}
    */
-  function nodePrepare($container, &$node) {
+  function nodePrepare($container, NodeInterface &$node) {
+    // This, normally, should not happen.
+    if ('ding_event' !== $node->bundle()) {
+      return;
+    }
+
     $node->setTitle($container->getTitle());
 
     $node->set('field_ding_event_lead', $this->plainText($container->getLead()));

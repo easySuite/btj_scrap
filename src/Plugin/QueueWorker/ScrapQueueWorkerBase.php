@@ -5,6 +5,7 @@ namespace Drupal\btj_scrapper\Plugin\QueueWorker;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Queue\QueueWorkerBase;
 use Drupal\file\Entity\File;
+use Drupal\node\NodeInterface;
 use Drupal\taxonomy\Entity\Term;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -26,7 +27,7 @@ abstract class ScrapQueueWorkerBase extends QueueWorkerBase implements
   /**
    * Prepare all fields of the node.
    */
-  abstract protected function nodePrepare($container, &$node);
+  abstract protected function nodePrepare($container, NodeInterface &$node);
 
   /**
    * Get bundle category term.
