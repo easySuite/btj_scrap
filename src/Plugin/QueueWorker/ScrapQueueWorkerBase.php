@@ -112,6 +112,12 @@ abstract class ScrapQueueWorkerBase extends QueueWorkerBase implements
    */
   protected function prepareImage(string $url) {
     $destination = 'public://';
+
+    // TODO: Ignore base64 images, for now.
+    if (preg_match('~data:image/(png|jpg|jpeg|gif);base64~', $url)) {
+      return NULL;
+    }
+
     $fileName = sha1($url);
     /** @var \Drupal\file\FileInterface $file */
     $file = system_retrieve_file($url, $destination . $fileName, FALSE, FILE_EXISTS_REPLACE);
