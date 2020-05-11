@@ -11,3 +11,19 @@ entity.group.btj_crawler_settings:
       group:
         type: entity:group
     _admin_route: true
+
+btj.admin:
+  path: '/admin/config/btj'
+  defaults:
+    _controller: '\Drupal\system\Controller\SystemController::systemAdminMenuBlockPage'
+    _title: 'BTJ'
+  requirements:
+    _permission: 'administer site configuration'
+
+btj.global_settings:
+  path: '/admin/config/btj/global'
+  defaults:
+    _title: 'Global settings'
+    _form: '\Drupal\btj_scrapper\Form\GlobalSettingsForm'
+  requirements:
+    _permission: 'administer site configuration'

@@ -45,6 +45,7 @@ class ServiceRepository implements ServiceRepositoryInterface {
         ->get(GroupCrawlerSettingsForm::buildSettingsKey($group));
 
       $scrapper->setConfig($config ?? []);
+      $scrapper->setScrapingLimit($config['scraping_limit'] ?? 50);
     }
 
     return $scrapper;
