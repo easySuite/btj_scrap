@@ -126,6 +126,22 @@ class GroupCrawlerSettingsForm extends ConfigFormBase {
     $entity = 'library';
     $label = $this->t('Library');
 
+    $form['scrapper_settings']['scraping_limit'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Items to enqueue'),
+      '#description' => $this->t('Define how many items of each type to put in queue for processing.'),
+      '#options' => [
+        1 => 1,
+        5 => 5,
+        10 => 10,
+        25 => 25,
+        50 => 50,
+        100 => 100,
+      ],
+      '#default_value' => $config['scraping_limit'] ?? 50,
+      '#weight' => -1,
+    ];
+
     $form['scrapper_settings'][$entity] = [
       '#type' => 'details',
       '#title' => $label,

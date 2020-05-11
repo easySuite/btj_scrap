@@ -1,0 +1,10 @@
+btj.admin:
+  title: BTJ
+  parent: system.admin_config
+  route_name: btj.admin
+
+btj.global_settings:
+  title: Global settings
+  description: Configure global scraping options.
+  parent: btj.admin
+  route_name: btj.global_settings
