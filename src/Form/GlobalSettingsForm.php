@@ -2,7 +2,6 @@
 
 namespace Drupal\btj_scrapper\Form;
 
-use Drupal\Core\Datetime\DateFormatter;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -10,9 +9,9 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Class ServiceSettingsForm.
+ * Class GlobalSettingsForm.
  *
- * Allows to set MobileSearch service settings.
+ * Manage global BTJ settings.
  */
 class GlobalSettingsForm extends FormBase {
 
@@ -27,6 +26,8 @@ class GlobalSettingsForm extends FormBase {
    *
    * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
    *   Date formatter service.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   Messenger service.
    */
   public function __construct(DateFormatterInterface $dateFormatter, MessengerInterface $messenger) {
     $this->dateFormatter = $dateFormatter;
